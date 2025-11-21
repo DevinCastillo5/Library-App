@@ -1,0 +1,16 @@
+# IDE folders
+.idea/
+.vscode/
+
+# Python envs
+.venv/
+venv/
+greenlet.h
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS junk
+.DS_Store
+Thumbs.db
