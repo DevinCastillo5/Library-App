@@ -1,7 +1,9 @@
 from pydantic import BaseModel
+from typing import Optional
+from datetime import date
 
 class Reservations(BaseModel):
-    reservation_id: int
-    member_id: int
-    copy_id: int
-    reservation_date: str
+    ReservationID: int
+    DateFor: Optional[date] = None
+    MemberID: Optional[int] = None
+    BookReserved: Optional[str] = None

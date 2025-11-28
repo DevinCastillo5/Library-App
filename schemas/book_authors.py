@@ -1,5 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class Book_Authors(BaseModel):
-    book_id: int
-    author_name: str
+
+class BookAuthorBase(BaseModel):
+    ISBN: str = Field(..., min_length=13, max_length=13)
+    AuthorName: str
+
+
+class BookAuthorCreate(BookAuthorBase):
+    pass
+
+
+class BookAuthorRead(BookAuthorBase):
+    pass

@@ -1,9 +1,11 @@
 from pydantic import BaseModel
+from typing import Optional
+from datetime import date
 
 class Loans(BaseModel):
-    loan_id: int
-    member_id: int
-    staff_id: int
-    copy_id: int
-    loan_date: str
-    return_date: str
+    LoanID: int
+    ReturnDate: Optional[date] = None
+    ISBN: Optional[str] = None
+    MemberID: Optional[int] = None
+    StaffID: Optional[int] = None
+    CopyID: Optional[int] = None

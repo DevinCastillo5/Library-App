@@ -1,7 +1,8 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class Fines(BaseModel):
-    fine_id: int
-    loan_id: int
-    amount: float
-    daysOverdue: int
+    FineID: int
+    AmountFined: Optional[int] = None
+    DaysOverdue: Optional[int] = None
+    LoanID: Optional[int] = None

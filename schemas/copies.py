@@ -1,7 +1,8 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class Copies(BaseModel):
-    copy_id: int
+    CopyID: int
     ISBN: str
-    Shelf_location: str
-    Condition: str
+    ShelfLocation: Optional[str] = None
+    ConditionDesc: Optional[str] = None

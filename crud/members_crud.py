@@ -4,21 +4,21 @@ from database import database
 # READ all with pagination
 async def get_members(skip: int = 0, limit: int = 10):
     query = """
-        SELECT member_id, member_name, member_email, member_phone, member_address
+        SELECT memberID, memName, Email, Phone, Address
         FROM Members
         LIMIT :limit OFFSET :skip
     """
     return await database.fetch_all(query=query, values={'limit': limit, 'skip': skip})
 
 
-# READ one by member_id
-async def get_member(member_id: int):
+# READ one by memberID
+async def get_member(memberID: int):
     query = """
-        SELECT member_id, member_name, member_email, member_phone, member_address
+        SELECT memberID, memName, Email, Phone, Address
         FROM Members 
-        WHERE member_id = :member_id
+        WHERE memberID = :memberID
     """
-    row = await database.fetch_one(query=query, values={"member_id": member_id})
+    row = await database.fetch_one(query=query, values={"memberID": memberID})
     return dict(row) if row else None
 
 #I don't we need this one but I'll leave it here just in case
@@ -40,55 +40,55 @@ async def get_member(member_id: int):
 
 
 # CREATE new course
-async def create_member(member_id: int, member_name: str, member_email: str, member_phone: str, member_address: str) -> int:
+async def create_member(memberID: int, memName: str, Email: str, Phone: str, Address: str) -> int:
     query = """
-        INSERT INTO Members (member_id, member_name, member_email, member_phone, member_address)
-        VALUES (:member_id, :member_name, :member_email, :member_phone, :member_address)
+        INSERT INTO Members (memberID, memName, Email, Phone, Address)
+        VALUES (:memberID, :memName, :Email, :Phone, :Address)
     """
     try:
         await database.execute(query=query, values={
-            "member_id": member_id,
-            "member_name": member_name,
-            "member_email": member_email,
-            "member_phone": member_phone,
-            "member_address": member_address
+            "memberID": memberID,
+            "memName": memName,
+            "Email": Email,
+            "Phone": Phone,
+            "Address": Address
         })
-        return member_id
+        return memberID
     except Exception:
-        raise ValueError(f"Member with ID {member_id} already exists or invalid data.")
+        raise ValueError(f"Member with ID {memberID} already exists or invalid data.")
 
 # UPDATE member
-async def update_member(member_id: int, member_name: str, member_email: str, member_phone: str, member_address: str) -> bool:
+async def update_member(memberID: int, memName: str, Email: str, Phone: str, Address: str) -> bool:
     query = """
         UPDATE Members 
-        SET member_name = :member_name, member_email = :member_email, member_phone = :member_phone, member_address = :member_address
-        WHERE member_id = :member_id
+        SET memName = :memName, Email = :Email, Phone = :Phone, Address = :Address
+        WHERE memberID = :memberID
     """
     try:
         await database.execute(query=query, values={
-            "member_id": member_id,
-            "member_name": member_name,
-            "member_email": member_email,
-            "member_phone": member_phone,
-            "member_address": member_address
+            "memberID": memberID,
+            "memName": memName,
+            "Email": Email,
+            "Phone": Phone,
+            "Address": Address
         })
         return True
     except Exception as err:
-        raise ValueError(f"Error updating member {member_id}: {err}")
+        raise ValueError(f"Error updating member {memberID}: {err}")
 
 # DELETE one
-async def delete_member(member_id: int) -> int:
-    query = "DELETE FROM Members WHERE member_id = :member_id"
-    return await database.execute(query=query, values={"member_id": member_id})
+async def delete_member(memberID: int) -> int:
+    query = "DELETE FROM Members WHERE memberID = :memberID"
+    return await database.execute(query=query, values={"memberID": memberID})
 
 
 # DELETE many
-async def delete_members(member_ids: list[int]) -> int:
-    if not member_ids:
+async def delete_members(memberIDs: list[int]) -> int:
+    if not memberIDs:
         return 0
-    placeholders = ",".join(f":id{i}" for i in range(len(member_ids)))
-    query = f"DELETE FROM Members WHERE member_id IN ({placeholders})"
-    values = {f"id{i}": member_id for i, member_id in enumerate(member_ids)}
+    placeholders = ",".join(f":id{i}" for i in range(len(memberIDs)))
+    query = f"DELETE FROM Members WHERE memberID IN ({placeholders})"
+    values = {f"id{i}": memberID for i, memberID in enumerate(memberIDs)}
     return await database.execute(query=query, values=values)
 
 
