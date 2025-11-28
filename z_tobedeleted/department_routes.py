@@ -1,6 +1,6 @@
 from database import database
 from schemas.department import Department
-from crud.department_crud import (get_departments, get_department, create_department,
+from z_tobedeleted.department_crud import (get_departments, get_department, create_department,
                                   delete_department, update_department)
 from fastapi import APIRouter, HTTPException
 

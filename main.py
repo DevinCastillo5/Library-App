@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 
 from database import database, DATABASE_URL
-from routes.department_routes import router as department_router
+from z_tobedeleted.department_routes import router as department_router
 from starlette_admin.contrib.sqla import Admin
 from views.department_view import DepartmentView
 from sqlalchemy.ext.asyncio import create_async_engine
