@@ -3,49 +3,45 @@ from typing import Any, List, Optional
 from starlette.requests import Request
 from starlette_admin import BaseModelView
 from starlette_admin.exceptions import FormValidationError
-from starlette_admin.fields import IntegerField, StringField, DateField
-from crud.loans_crud import *
+from starlette_admin.fields import StringField
+from crud.book_authors_crud import *
 from database import database
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class LoansView(BaseModelView):
+class BookAuthorsView(BaseModelView):
     # ===================================================================
     # BASIC CONFIGURATION
     # ===================================================================
-    identity = "loans"
-    name = "Loan"
-    label = "Loans"
-    icon = "fa fa-handshake"
-    pk_attr = "LoanID"
+    identity = "book_authors"
+    name = "BookAuthor"
+    label = "Book Authors"
+    icon = "fa fa-user-edit"
+    pk_attr = "ISBN"  # composite PK, serialize PK in delete
 
     form_include_pk = True
-
-    searchable_fields = ["LoanID"]
-    sortable_fields = ["LoanID", "ReturnDate", "ISBN", "MemberID", "StaffID", "CopyID"]
+    searchable_fields = ["ISBN", "AuthorName"]
+    sortable_fields = ["ISBN", "AuthorName"]
 
     # ===================================================================
     # FIELD DEFINITIONS
     # ===================================================================
     fields = [
-        IntegerField(name="LoanID", label="Loan ID", required=True),
-        DateField(name="ReturnDate", label="Return Date", required=False),
-        StringField(name="ISBN", label="Book ISBN", required=False),
-        IntegerField(name="MemberID", label="Member ID", required=False),
-        IntegerField(name="StaffID", label="Staff ID", required=False),
-        IntegerField(name="CopyID", label="Copy ID", required=False),
+        StringField(name="ISBN", label="Book ISBN", required=True),
+        StringField(name="AuthorName", label="Author Name", required=True),
     ]
 
     # ===================================================================
-    # EXTRACT PRIMARY KEY VALUE
+    # EXTRACT PRIMARY KEY VALUE (composite PK)
     # ===================================================================
     async def get_pk_value(self, request: Request, obj: Any) -> Any:
-        return obj["LoanID"] if isinstance(obj, dict) else getattr(obj, self.pk_attr)
+        # composite PK as tuple
+        return (obj["ISBN"], obj["AuthorName"]) if isinstance(obj, dict) else (getattr(obj, "ISBN"), getattr(obj, "AuthorName"))
 
     # ===================================================================
-    # SERIALIZE OBJECT
+    # SERIALIZE
     # ===================================================================
     async def serialize(self, *args, **kwargs) -> dict:
         obj = args[0] if args else kwargs.get("obj") or kwargs.get("instance")
@@ -55,41 +51,29 @@ class LoansView(BaseModelView):
         if not isinstance(obj, dict):
             obj = dict(obj._mapping) if hasattr(obj, "_mapping") else obj.__dict__
 
-        # Fetch related display info (book title, member name, staff name)
+        # Optional: Fetch Book title and Author details for display
         async with database:
             book_title = None
-            member_name = None
-            staff_name = None
-            copy_location = None
+            author_dob = None
+            author_nationality = None
 
             if obj.get("ISBN"):
                 book = await database.fetch_one("SELECT Title FROM Books WHERE ISBN = :isbn", values={"isbn": obj["ISBN"]})
                 book_title = book["Title"] if book else None
 
-            if obj.get("MemberID"):
-                member = await database.fetch_one("SELECT MemberName FROM Members WHERE MemberID = :id", values={"id": obj["MemberID"]})
-                member_name = member["MemberName"] if member else None
-
-            if obj.get("StaffID"):
-                staff = await database.fetch_one("SELECT StaffName FROM Staff WHERE StaffID = :id", values={"id": obj["StaffID"]})
-                staff_name = staff["StaffName"] if staff else None
-
-            if obj.get("CopyID"):
-                copy = await database.fetch_one("SELECT ShelfLocation FROM Copies WHERE CopyID = :id", values={"id": obj["CopyID"]})
-                copy_location = copy["ShelfLocation"] if copy else None
+            if obj.get("AuthorName"):
+                author = await database.fetch_one("SELECT DOB, Nationality FROM Authors WHERE AuthorName = :name", values={"name": obj["AuthorName"]})
+                if author:
+                    author_dob = author["DOB"]
+                    author_nationality = author["Nationality"]
 
         return {
-            "LoanID": obj.get("LoanID"),
-            "ReturnDate": obj.get("ReturnDate"),
             "ISBN": obj.get("ISBN"),
             "BookTitle": book_title,
-            "MemberID": obj.get("MemberID"),
-            "MemberName": member_name,
-            "StaffID": obj.get("StaffID"),
-            "StaffName": staff_name,
-            "CopyID": obj.get("CopyID"),
-            "CopyLocation": copy_location,
-            "_meta": {"pk": obj.get("LoanID")},
+            "AuthorName": obj.get("AuthorName"),
+            "AuthorDOB": author_dob,
+            "AuthorNationality": author_nationality,
+            "_meta": {"pk": (obj.get("ISBN"), obj.get("AuthorName"))},
         }
 
     # ===================================================================
@@ -97,27 +81,22 @@ class LoansView(BaseModelView):
     # ===================================================================
     async def validate(self, request: Request, data: dict) -> None:
         errors = {}
-        if not data.get("LoanID"):
-            errors["LoanID"] = "Required"
+        if not data.get("ISBN"):
+            errors["ISBN"] = "Required"
+        if not data.get("AuthorName"):
+            errors["AuthorName"] = "Required"
 
-        # Validate foreign keys exist
+        # Check foreign keys exist
         async with database:
             if data.get("ISBN"):
                 exists = await database.fetch_val("SELECT COUNT(*) FROM Books WHERE ISBN = :isbn", values={"isbn": data["ISBN"]})
                 if exists == 0:
                     errors["ISBN"] = f"Book ISBN {data['ISBN']} does not exist"
-            if data.get("MemberID"):
-                exists = await database.fetch_val("SELECT COUNT(*) FROM Members WHERE MemberID = :id", values={"id": data["MemberID"]})
+
+            if data.get("AuthorName"):
+                exists = await database.fetch_val("SELECT COUNT(*) FROM Authors WHERE AuthorName = :name", values={"name": data["AuthorName"]})
                 if exists == 0:
-                    errors["MemberID"] = f"Member ID {data['MemberID']} does not exist"
-            if data.get("StaffID"):
-                exists = await database.fetch_val("SELECT COUNT(*) FROM Staff WHERE StaffID = :id", values={"id": data["StaffID"]})
-                if exists == 0:
-                    errors["StaffID"] = f"Staff ID {data['StaffID']} does not exist"
-            if data.get("CopyID"):
-                exists = await database.fetch_val("SELECT COUNT(*) FROM Copies WHERE CopyID = :id", values={"id": data["CopyID"]})
-                if exists == 0:
-                    errors["CopyID"] = f"Copy ID {data['CopyID']} does not exist"
+                    errors["AuthorName"] = f"Author {data['AuthorName']} does not exist"
 
         if errors:
             raise FormValidationError(errors)
@@ -127,7 +106,7 @@ class LoansView(BaseModelView):
     # ===================================================================
     async def find_all(self, request: Request, skip: int = 0, limit: int = 100, where: Optional[Any] = None, order_by: Optional[List[Any]] = None) -> List[Any]:
         async with database:
-            rows = await get_loans(skip, limit)
+            rows = await get_book_authors(skip, limit)
             return [dict(row) for row in rows]
 
     # ===================================================================
@@ -135,50 +114,35 @@ class LoansView(BaseModelView):
     # ===================================================================
     async def count(self, request: Request, where: Optional[Any] = None) -> int:
         async with database:
-            return await database.fetch_val("SELECT COUNT(*) FROM Loans")
+            return await database.fetch_val("SELECT COUNT(*) FROM BookAuthors")
 
     # ===================================================================
     # FIND BY PRIMARY KEY
     # ===================================================================
     async def find_by_pk(self, request: Request, pk: Any) -> Optional[Any]:
+        isbn, author_name = pk
         async with database:
-            return await get_loan(pk)
+            rows = await get_authors_by_book(isbn)
+            for r in rows:
+                if r["AuthorName"] == author_name:
+                    return r
+            return None
 
     # ===================================================================
-    # CREATE NEW LOAN
+    # CREATE NEW RELATIONSHIP
     # ===================================================================
     async def create(self, request: Request, data: dict) -> Any:
         await self.validate(request, data)
         async with database:
-            await create_loan(
-                loan_id=data["LoanID"],
-                return_date=data.get("ReturnDate"),
-                isbn=data.get("ISBN"),
-                member_id=data.get("MemberID"),
-                staff_id=data.get("StaffID"),
-                copy_id=data.get("CopyID"),
-            )
-            return await get_loan(data["LoanID"])
+            await create_book_author(data["ISBN"], data["AuthorName"])
+            return {"ISBN": data["ISBN"], "AuthorName": data["AuthorName"]}
 
     # ===================================================================
-    # UPDATE EXISTING LOAN
-    # ===================================================================
-    async def edit(self, request: Request, pk: Any, data: dict) -> Any:
-        await self.validate(request, data)
-        async with database:
-            await update_loan(
-                loan_id=pk,
-                return_date=data.get("ReturnDate"),
-                isbn=data.get("ISBN"),
-                member_id=data.get("MemberID"),
-                staff_id=data.get("StaffID"),
-                copy_id=data.get("CopyID"),
-            )
-            return await get_loan(pk)
-
-    # ===================================================================
-    # DELETE ONE OR MANY LOANS
+    # DELETE ONE OR MANY RELATIONSHIPS
     # ===================================================================
     async def delete(self, request: Request, pks: List[Any]) -> int:
         async with database:
-            return await delete_loans(pks)
+            count = 0
+            for isbn, author_name in pks:
+                count += await delete_book_author(isbn, author_name)
+            return count

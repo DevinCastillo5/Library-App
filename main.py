@@ -1,19 +1,23 @@
 import uvicorn
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-
 from starlette.middleware.cors import CORSMiddleware
-
-from database import database, DATABASE_URL
-from z_tobedeleted.department_routes import router as department_router
-from starlette_admin.contrib.sqla import Admin
-from z_tobedeleted.department_view import DepartmentView
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from routes.course_routes import router as course_router
-from views.course_view import CourseView
+from database import database, DATABASE_URL
+
+# Import your views
+from views.authors_view import AuthorsView
+from views.loans_view import LoansView
+from views.book_authors_view import BookAuthorsView
+
+# Import Admin from Starlette Admin
+from starlette_admin.contrib.sqla import Admin
 
 
+# ================================
+# LIFESPAN: Connect/Disconnect DB
+# ================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await database.connect()
@@ -22,9 +26,15 @@ async def lifespan(app: FastAPI):
     await database.disconnect()
     print("Database disconnection established")
 
+
+# ================================
+# CREATE APP
+# ================================
 app = FastAPI(lifespan=lifespan)
 
-# Add CORS middleware
+# ================================
+# CORS (optional, for frontend dev)
+# ================================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,32 +43,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(department_router)
-app.include_router(course_router)
-
-# Create SQLAlchemy engine for admin
+# ================================
+# CREATE SQLAlchemy ENGINE
+# ================================
 engine = create_async_engine(DATABASE_URL)
 
-# Create admin instance without SQLAlchemy engine (for custom raw SQL views)
+# ================================
+# CREATE ADMIN PANEL
+# ================================
 admin = Admin(
     engine=engine,
-    title="Database Admin Panel",
+    title="Library Admin Panel",
     base_url="/admin"
 )
 
-admin.add_view(DepartmentView)
-#admin.add_view(CourseView)
+# Add views
+admin.add_view(AuthorsView)
+admin.add_view(LoansView)
+admin.add_view(BookAuthorsView)
 
+# Mount admin to FastAPI app
 admin.mount_to(app)
 
+# ================================
+# ROOT ROUTE
+# ================================
 @app.get("/")
 async def root():
     return {
-        "message": "Welcome to Database Course Project 2",
-        "dashboard_url": "/dashboard",
+        "message": "Welcome to Library Admin Panel",
         "admin_url": "/admin",
         "api_docs": "/docs"
     }
 
+
+# ================================
+# RUN SERVER
+# ================================
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8007, reload=True)
