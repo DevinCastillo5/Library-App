@@ -2,4 +2,4 @@ fastapi
 uvicorn
 databases[aiomysql]
 pydantic
-scarlett-admin
+starlette-admin
