@@ -53,3 +53,16 @@ async def api_delete_author(author_name: str):
         if deleted == 0:
             raise HTTPException(status_code=404, detail="Author not found")
         return {"detail": f"Author '{author_name}' deleted"}
+    
+# DELETE many: List of author names
+@router.delete("/batch/")
+async def api_delete_authors(author_names: List[str]):
+    async with database:
+        deleted_count = 0
+        for author_name in author_names:
+            deleted = await delete_author(author_name)
+            if deleted:
+                deleted_count += 1
+        if deleted_count == 0:
+            raise HTTPException(status_code=404, detail="No authors found to delete")
+        return {"detail": f"Deleted {deleted_count} authors"}
