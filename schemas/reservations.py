@@ -4,6 +4,6 @@ from datetime import date
 
 class Reservations(BaseModel):
     ReservationID: int
-    MemberID: int
+    memberID: int
     DateFor: date
     BookReserved: int

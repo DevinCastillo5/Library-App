@@ -37,7 +37,7 @@ async def api_create_reservation(reservation: Reservations):
 async def api_update_reservation(reservation: Reservations):
     async with database:
         try:
-            await update_reservation(reservation.ReservationID, reservation.DateFor, reservation.MemberID, reservation.BookReserved)
+            await update_reservation(reservation.ReservationID, reservation.DateFor, reservation.memberID, reservation.BookReserved)
             return reservation
         except ValueError as err:
             raise HTTPException(status_code=400, detail=str(err))
@@ -51,7 +51,7 @@ async def api_delete_reservation(reservationID: int):
             raise HTTPException(status_code=404, detail="Reservation not found")
         return {"detail": f"Reservation '{reservationID}' deleted"}
 
-# GET reservations by MemberID
+# GET reservations by memberID
 @router.get("/member/{memberID}", response_model=List[Reservations])
 async def api_get_reservations_by_member(memberID: int):
     async with database:
