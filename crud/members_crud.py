@@ -21,24 +21,6 @@ async def get_member(memberID: int):
     row = await database.fetch_one(query=query, values={"memberID": memberID})
     return dict(row) if row else None
 
-#I don't we need this one but I'll leave it here just in case
-
-# READ with JOIN to get department name (for display purposes)
-# async def get_course_with_department(course_code: int):
-#    """
-#    Fetch course with department name for better UI display.
-#    JOIN: Combines rows from Course and Department tables based on matching department_code.
-#    """
-#    query = """
-#        SELECT c.course_code, c.course_title, c.department_code, d.department_name
-#        FROM Course c
-#        LEFT JOIN Department d ON c.department_code = d.department_code
-#        WHERE c.course_code = :course_code
-#    """
-#    row = await database.fetch_one(query=query, values={"course_code": course_code})
-#    return dict(row) if row else None
-
-
 # CREATE new course
 async def create_member(memberID: int, memName: str, Email: str, Phone: str, Address: str) -> int:
     query = """
@@ -91,13 +73,3 @@ async def delete_members(memberIDs: list[int]) -> int:
     values = {f"id{i}": memberID for i, memberID in enumerate(memberIDs)}
     return await database.execute(query=query, values=values)
 
-
-# Helper: Get all departments for dropdown (NEW - for FK support)
-#async def get_all_departments():
-#   """
-#    Fetch all departments to populate dropdown in admin UI.
-#    Returns list of tuples: [(dept_code, dept_name), ...]
-#    """
-#    query = "SELECT department_code, department_name FROM Department ORDER BY department_name"
-#    rows = await database.fetch_all(query=query)
-#   return [(row["department_code"], row["department_name"]) for row in rows]
