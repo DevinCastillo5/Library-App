@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine
 
+
 from database import database, DATABASE_URL
 
 # Import your views
@@ -13,6 +14,9 @@ from views.book_authors_view import BookAuthorsView
 from views.reservations_view import ReservationsView
 from views.staff_views import StaffViews
 from views.fines_view import FinesView
+
+# Import your models
+from models.reservations_model import Reservation
 
 # Import Admin from Starlette Admin
 from starlette_admin.contrib.sqla import Admin
@@ -63,6 +67,10 @@ admin = Admin(
 admin.add_view(AuthorsView)
 admin.add_view(LoansView)
 admin.add_view(BookAuthorsView)
+# admin.add_view(ReservationsView)
+admin.add_view(ReservationsView(model=Reservation))
+admin.add_view(StaffViews)
+admin.add_view(FinesView)
 
 # Mount admin to FastAPI app
 admin.mount_to(app)

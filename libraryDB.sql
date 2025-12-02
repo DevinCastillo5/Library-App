@@ -68,9 +68,6 @@ CREATE TABLE Staff (
     WorkTime INT
 );
 
-
-
-
 CREATE TABLE Reservations (
     ReservationID INT PRIMARY KEY,
     DateFor DATE,
