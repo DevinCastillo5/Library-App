@@ -1,68 +1,70 @@
-from database import database
+# crud/staff_crud.py
+from typing import List
+from fastapi import HTTPException
+from schemas.staff import Staff
+from database import database  # your database.py file
 
-# READ all staff with pagination
-async def get_staff(skip: int = 0, limit: int = 10):
-    query = """
+TABLE_NAME = "Staff"
+
+# Ensure connection is active
+async def ensure_connection():
+    if not database.is_connected:
+        await database.connect()
+
+
+# Get all staff members (optional pagination)
+async def get_staff(skip: int = 0, limit: int = 100) -> List[Staff]:
+    await ensure_connection()
+    query = f"""
         SELECT StaffID, StaffName, Position, WorkTime
-        FROM Staff
+        FROM {TABLE_NAME}
         LIMIT :limit OFFSET :skip
     """
-    return await database.fetch_all(query=query, values={'limit': limit, 'skip': skip})
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    return [Staff(**row) for row in rows]
 
-# READ one staff by StaffID
-async def get_staff_member(StaffID: int):
-    query = """
+
+# Get one staff member
+async def get_staff_member(staff_id: int) -> Staff:
+    await ensure_connection()
+    query = f"""
         SELECT StaffID, StaffName, Position, WorkTime
-        FROM Staff
-        WHERE StaffID = :StaffID
+        FROM {TABLE_NAME}
+        WHERE StaffID = :staff_id
     """
-    row = await database.fetch_one(query=query, values={"StaffID": StaffID})
-    return dict(row) if row else None
+    row = await database.fetch_one(query=query, values={"staff_id": staff_id})
+    if row:
+        return Staff(**row)
+    raise HTTPException(status_code=404, detail="Staff member not found")
 
-# CREATE new staff member
-async def create_staff(StaffID: int, StaffName: str, Position: str = None, WorkTime: int = None) -> int:
-    query = """
-        INSERT INTO Staff (StaffID, StaffName, Position, WorkTime)
+
+# Create new staff member
+async def create_staff(staff: Staff) -> Staff:
+    await ensure_connection()
+    query = f"""
+        INSERT INTO {TABLE_NAME} (StaffID, StaffName, Position, WorkTime)
         VALUES (:StaffID, :StaffName, :Position, :WorkTime)
     """
-    try:
-        await database.execute(query=query, values={
-            "StaffID": StaffID,
-            "StaffName": StaffName,
-            "Position": Position,
-            "WorkTime": WorkTime
-        })
-        return StaffID
-    except Exception:
-        raise ValueError(f"Staff member with ID {StaffID} already exists or invalid data.")
-    
-# UPDATE staff member
-async def update_staff(StaffID: int, StaffName: str, Position: str, WorkTime: int) -> bool:
-    query = """
-        UPDATE Staff 
-        SET StaffName = :StaffName, Position = :Position, WorkTime = :WorkTime
+    await database.execute(query=query, values=staff.dict())
+    return staff
+
+
+# Update staff
+async def update_staff(staff: Staff) -> Staff:
+    await ensure_connection()
+    query = f"""
+        UPDATE {TABLE_NAME}
+        SET StaffName = :StaffName,
+            Position = :Position,
+            WorkTime = :WorkTime
         WHERE StaffID = :StaffID
     """
-    try:
-        await database.execute(query=query, values={
-            "StaffID": StaffID,
-            "StaffName": StaffName,
-            "Position": Position,
-            "WorkTime": WorkTime
-        })
-        return True
-    except Exception as err:
-        raise ValueError(f"Error updating staff member {StaffID}: {err}")
-    
-# DELETE staff member
-async def delete_staff(StaffID: int) -> bool:
-    query = """
-        DELETE FROM Staff 
-        WHERE StaffID = :StaffID
-    """
-    try:
-        await database.execute(query=query, values={"StaffID": StaffID})
-        return True
-    except Exception as err:
-        raise ValueError(f"Error deleting staff member {StaffID}: {err}")
-    
+    await database.execute(query=query, values=staff.dict())
+    return staff
+
+
+# Delete staff
+async def delete_staff(staff_id: int):
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE StaffID = :staff_id"
+    await database.execute(query=query, values={"staff_id": staff_id})

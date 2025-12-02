@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Staff CRUD Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Staff CRUD Test</h1>
+
+    <h2>Add / Update Staff</h2>
+
+    <label>Staff ID: <input type="number" id="staffID" /></label>
+    <label>Staff Name: <input type="text" id="staffName" /></label>
+    <label>Position: <input type="text" id="position" /></label>
+    <label>Work Time (hours): <input type="number" id="workTime" /></label>
+
+    <button onclick="createStaff()">Create</button>
+    <button onclick="updateStaff()">Update</button>
+
+    <h2>Staff List</h2>
+    <table id="staffTable">
+      <thead>
+        <tr>
+          <th>Staff ID</th>
+          <th>Staff Name</th>
+          <th>Position</th>
+          <th>Work Time</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      const API_URL = "/staff";
+
+      // Load all staff
+      async function loadStaff() {
+        const res = await fetch(API_URL);
+        const staffList = await res.json();
+        const tbody = document.querySelector("#staffTable tbody");
+        tbody.innerHTML = "";
+
+        staffList.forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${s.StaffID}</td>
+            <td>${s.StaffName}</td>
+            <td>${s.Position ?? ""}</td>
+            <td>${s.WorkTime ?? ""}</td>
+            <td>
+              <button onclick="deleteStaff(${s.StaffID})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Create new staff
+      async function createStaff() {
+        const staff = {
+          StaffID: parseInt(document.getElementById("staffID").value),
+          StaffName: document.getElementById("staffName").value,
+          Position: document.getElementById("position").value,
+          WorkTime: parseInt(document.getElementById("workTime").value),
+        };
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(staff),
+        });
+
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Staff created successfully!";
+          loadStaff();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Update staff
+      async function updateStaff() {
+        const staff = {
+          StaffID: parseInt(document.getElementById("staffID").value),
+          StaffName: document.getElementById("staffName").value,
+          Position: document.getElementById("position").value,
+          WorkTime: parseInt(document.getElementById("workTime").value),
+        };
+
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(staff),
+        });
+
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Staff updated successfully!";
+          loadStaff();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Delete staff
+      async function deleteStaff(staffID) {
+        if (!confirm(`Delete staff ID "${staffID}"?`)) return;
+
+        const res = await fetch(`${API_URL}/${staffID}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          document.getElementById("message").innerText = "Staff deleted!";
+          loadStaff();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Initial load
+      loadStaff();
+    </script>
+  </body>
+</html>

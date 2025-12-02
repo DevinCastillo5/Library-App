@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Members CRUD Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Members CRUD Test</h1>
+
+    <h2>Add / Update Member</h2>
+    <label>Member ID: <input type="number" id="memberID" /></label>
+    <label>Name: <input type="text" id="memName" /></label>
+    <label>Email: <input type="text" id="email" /></label>
+    <label>Phone: <input type="text" id="phone" /></label>
+    <label>Address: <input type="text" id="address" /></label>
+    <button onclick="createMember()">Create</button>
+    <button onclick="updateMember()">Update</button>
+
+    <h2>Members List</h2>
+    <table id="membersTable">
+      <thead>
+        <tr>
+          <th>Member ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      const API_URL = "/api/members";
+
+      // Fetch and display all members
+      async function loadMembers() {
+        const res = await fetch(API_URL);
+        const members = await res.json();
+        const tbody = document.querySelector("#membersTable tbody");
+        tbody.innerHTML = "";
+        members.forEach((member) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${member.memberID}</td>
+            <td>${member.memName}</td>
+            <td>${member.Email}</td>
+            <td>${member.Phone}</td>
+            <td>${member.Address}</td>
+            <td>
+                <button onclick="deleteMember(${member.memberID})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Create new member
+      async function createMember() {
+        const member = {
+          memberID: parseInt(document.getElementById("memberID").value),
+          memName: document.getElementById("memName").value,
+          Email: document.getElementById("email").value,
+          Phone: document.getElementById("phone").value,
+          Address: document.getElementById("address").value,
+        };
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(member),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Member created successfully!";
+          loadMembers();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Update member
+      async function updateMember() {
+        const member = {
+          memberID: parseInt(document.getElementById("memberID").value),
+          memName: document.getElementById("memName").value,
+          Email: document.getElementById("email").value,
+          Phone: document.getElementById("phone").value,
+          Address: document.getElementById("address").value,
+        };
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(member),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Member updated successfully!";
+          loadMembers();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Delete member
+      async function deleteMember(memberID) {
+        if (!confirm(`Delete member ID "${memberID}"?`)) return;
+        const res = await fetch(`${API_URL}/${memberID}`, { method: "DELETE" });
+        if (res.ok) {
+          document.getElementById("message").innerText = "Member deleted!";
+          loadMembers();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Initial load
+      loadMembers();
+    </script>
+  </body>
+</html>

@@ -1,78 +1,68 @@
-from database import database
-from datetime import date
+# crud/reservations_crud.py
+from typing import List
+from fastapi import HTTPException
+from databases import Database
+from schemas.reservations import Reservations
+from database import database  # your database.py file
 
-# READ all reservations with pagination
-async def get_reservations(skip: int = 0, limit: int = 10):
-    query = """
-        SELECT reservationID, DateFor, memberID, BookReserved
-        FROM Reservations
-        LIMIT :limit OFFSET :skip
-    """
-    return await database.fetch_all(query=query, values={'limit': limit, 'skip': skip})
+TABLE_NAME = "Reservations"
 
-# READ one reservation by reservationID
-async def get_reservation(reservationID: int):
-    query = """
-        SELECT reservationID, DateFor, memberID, BookReserved
-        FROM Reservations
-        WHERE reservationID = :reservationID
-    """
-    row = await database.fetch_one(query=query, values={"reservationID": reservationID})
-    return dict(row) if row else None
+# Ensure connection is active
+async def ensure_connection():
+    if not database.is_connected:
+        await database.connect()
 
-# CREATE new reservation
-async def create_reservation(reservationID: int, DateFor: str, memberID: int, BookReserved: str) -> int:
-    query = """
-        INSERT INTO Reservations (reservationID, DateFor, memberID, BookReserved)
-        VALUES (:reservationID, :DateFor, :memberID, :BookReserved)
-    """
-    try:
-        await database.execute(query=query, values={
-            "reservationID": reservationID,
-            "DateFor": DateFor,
-            "memberID": memberID,
-            "BookReserved": BookReserved
-        })
-        return reservationID
-    except Exception:
-        raise ValueError(f"Reservation with ID {reservationID} already exists or invalid data.")
-    
-# UPDATE reservation
-async def update_reservation(reservationID: int, DateFor: date, memberID: int, BookReserved: int) -> bool:
-    query = """
-        UPDATE Reservations 
-        SET DateFor = :DateFor, memberID = :memberID, BookReserved = :BookReserved
-        WHERE reservationID = :reservationID
-    """
-    try:
-        await database.execute(query=query, values={
-            "reservationID": reservationID,
-            "DateFor": DateFor,
-            "memberID": memberID,
-            "BookReserved": BookReserved
-        })
-        return True
-    except Exception as err:
-        raise ValueError(f"Error updating reservation {reservationID}: {err}")
-    
-# DELETE reservation
-async def delete_reservation(reservationID: int) -> bool:
-    query = """
-        DELETE FROM Reservations 
-        WHERE reservationID = :reservationID
-    """
-    try:
-        await database.execute(query=query, values={"reservationID": reservationID})
-        return True
-    except Exception as err:
-        raise ValueError(f"Error deleting reservation {reservationID}: {err}")
+# Get all reservations with optional pagination
+async def get_reservations(skip: int = 0, limit: int = 100) -> List[Reservations]:
+    await ensure_connection()
+    query = f"SELECT ReservationID, memberID, DateFor, BookReserved FROM {TABLE_NAME} LIMIT :limit OFFSET :skip"
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    # Convert DateFor to date object
+    return [Reservations(**{**row, "DateFor": row["DateFor"]}) for row in rows]
 
-# READ reservations by MemberID
-async def get_reservations_by_member(memberID: int, skip: int = 0, limit: int = 10):
-    query = """
-        SELECT reservationID, DateFor, memberID, BookReserved
-        FROM Reservations
-        WHERE memberID = :memberID
-        LIMIT :limit OFFSET :skip
+# Get a single reservation by ID
+async def get_reservation(reservation_id: int) -> Reservations:
+    await ensure_connection()
+    query = f"SELECT ReservationID, memberID, DateFor, BookReserved FROM {TABLE_NAME} WHERE ReservationID = :reservation_id"
+    row = await database.fetch_one(query=query, values={"reservation_id": reservation_id})
+    if row:
+        return Reservations(**{**row, "DateFor": row["DateFor"]})
+    raise HTTPException(status_code=404, detail="Reservation not found")
+
+# Create a new reservation
+async def create_reservation(reservation: Reservations) -> Reservations:
+    await ensure_connection()
+    query = f"""
+        INSERT INTO {TABLE_NAME} (ReservationID, memberID, DateFor, BookReserved)
+        VALUES (:ReservationID, :memberID, :DateFor, :BookReserved)
     """
-    return await database.fetch_all(query=query, values={'memberID': memberID, 'limit': limit, 'skip': skip})
+    # Convert DateFor to string for SQL
+    values = {**reservation.dict(), "DateFor": reservation.DateFor.isoformat()}
+    await database.execute(query=query, values=values)
+    return reservation
+
+# Update an existing reservation
+async def update_reservation(reservation: Reservations) -> Reservations:
+    await ensure_connection()
+    query = f"""
+        UPDATE {TABLE_NAME}
+        SET memberID = :memberID,
+            DateFor = :DateFor,
+            BookReserved = :BookReserved
+        WHERE ReservationID = :ReservationID
+    """
+    values = {**reservation.dict(), "DateFor": reservation.DateFor.isoformat()}
+    await database.execute(query=query, values=values)
+    return reservation
+
+# Delete a reservation by ID
+async def delete_reservation(reservation_id: int):
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE ReservationID = :reservation_id"
+    await database.execute(query=query, values={"reservation_id": reservation_id})
+
+# delete reservations by memberID
+async def delete_reservations_by_member(member_id: int):
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE memberID = :member_id"
+    await database.execute(query=query, values={"member_id": member_id})

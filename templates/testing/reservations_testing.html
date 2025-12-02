@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reservations CRUD Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Reservations CRUD Test</h1>
+
+    <h2>Add / Update Reservation</h2>
+    <label>Reservation ID: <input type="number" id="reservationID" /></label>
+    <label>Member ID: <input type="number" id="memberID" /></label>
+    <label>Date For (YYYY-MM-DD): <input type="date" id="dateFor" /></label>
+    <label
+      >Book Reserved (Book ID): <input type="number" id="bookReserved"
+    /></label>
+    <button onclick="createReservation()">Create</button>
+    <button onclick="updateReservation()">Update</button>
+
+    <h2>Reservations List</h2>
+    <table id="reservationsTable">
+      <thead>
+        <tr>
+          <th>Reservation ID</th>
+          <th>Member ID</th>
+          <th>Date For</th>
+          <th>Book Reserved</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      const API_URL = "/api/reservations";
+
+      // Fetch and display all reservations
+      async function loadReservations() {
+        const res = await fetch(API_URL);
+        const reservations = await res.json();
+        const tbody = document.querySelector("#reservationsTable tbody");
+        tbody.innerHTML = "";
+        reservations.forEach((resv) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${resv.ReservationID}</td>
+            <td>${resv.memberID}</td>
+            <td>${resv.DateFor}</td>
+            <td>${resv.BookReserved}</td>
+            <td>
+                <button onclick="deleteReservation(${resv.ReservationID})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Create new reservation
+      async function createReservation() {
+        const reservation = {
+          ReservationID: parseInt(
+            document.getElementById("reservationID").value
+          ),
+          memberID: parseInt(document.getElementById("memberID").value),
+          DateFor: document.getElementById("dateFor").value,
+          BookReserved: parseInt(document.getElementById("bookReserved").value),
+        };
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reservation),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Reservation created successfully!";
+          loadReservations();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Update reservation
+      async function updateReservation() {
+        const reservation = {
+          ReservationID: parseInt(
+            document.getElementById("reservationID").value
+          ),
+          memberID: parseInt(document.getElementById("memberID").value),
+          DateFor: document.getElementById("dateFor").value,
+          BookReserved: parseInt(document.getElementById("bookReserved").value),
+        };
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reservation),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Reservation updated successfully!";
+          loadReservations();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Delete reservation
+      async function deleteReservation(reservationID) {
+        if (!confirm(`Delete reservation ID "${reservationID}"?`)) return;
+        const res = await fetch(`${API_URL}/${reservationID}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText = "Reservation deleted!";
+          loadReservations();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Initial load
+      loadReservations();
+    </script>
+  </body>
+</html>

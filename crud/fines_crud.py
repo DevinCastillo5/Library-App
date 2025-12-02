@@ -1,76 +1,63 @@
-from database import database
+# crud/fines_crud.py
+from typing import List
+from databases import Database
+from fastapi import HTTPException
+from schemas.fines import Fines
+from database import database  # your database.py file
 
-# READ all fines with pagination
-async def get_fines(skip: int = 0, limit: int = 10):
-    query = """
-        SELECT FineID, AmountFined, DaysOverdue, LoanID
-        FROM Fines
-        LIMIT :limit OFFSET :skip
-    """
-    return await database.fetch_all(query=query, values={'limit': limit, 'skip': skip})
+TABLE_NAME = "Fines"
 
-# READ one fine by FineID
-async def get_fine(FineID: int):
-    query = """
-        SELECT FineID, AmountFined, DaysOverdue, LoanID
-        FROM Fines
-        WHERE FineID = :FineID
-    """
-    row = await database.fetch_one(query=query, values={"FineID": FineID})
-    return dict(row) if row else None
+# Ensure connection is active
+async def ensure_connection():
+    if not database.is_connected:
+        await database.connect()
 
-# CREATE new fine
-async def create_fine(FineID: int, AmountFined: int, DaysOverdue: int, LoanID: int) -> int:
-    query = """
-        INSERT INTO Fines (FineID, AmountFined, DaysOverdue, LoanID)
-        VALUES (:FineID, :AmountFined, :DaysOverdue, :LoanID)
+
+# Get all fines with optional pagination
+async def get_fines(skip: int = 0, limit: int = 100) -> List[Fines]:
+    await ensure_connection()
+    query = f"SELECT * FROM {TABLE_NAME} LIMIT :limit OFFSET :skip"
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    return [Fines(**row) for row in rows]
+
+
+# Get a single fine by FineID
+async def get_fine(fine_id: int) -> Fines:
+    await ensure_connection()
+    query = f"SELECT * FROM {TABLE_NAME} WHERE FineID = :fine_id"
+    row = await database.fetch_one(query=query, values={"fine_id": fine_id})
+    if row:
+        return Fines(**row)
+    raise HTTPException(status_code=404, detail="Fine not found")
+
+
+# Create a new fine
+async def create_fine(fine: Fines) -> Fines:
+    await ensure_connection()
+    query = f"""
+    INSERT INTO {TABLE_NAME} (FineID, AmountFined, DaysOverdue, LoanID)
+    VALUES (:FineID, :AmountFined, :DaysOverdue, :LoanID)
     """
-    try:
-        await database.execute(query=query, values={
-            "FineID": FineID,
-            "AmountFined": AmountFined,
-            "DaysOverdue": DaysOverdue,
-            "LoanID": LoanID
-        })
-        return FineID
-    except Exception:
-        raise ValueError(f"Fine with ID {FineID} already exists or invalid data.")
-    
-# UPDATE fine
-async def update_fine(FineID: int, AmountFined: int, DaysOverdue: int, LoanID: int) -> bool:
-    query = """
-        UPDATE Fines 
-        SET AmountFined = :AmountFined, DaysOverdue = :DaysOverdue, LoanID = :LoanID
-        WHERE FineID = :FineID
+    await database.execute(query=query, values=fine.dict())
+    return fine
+
+
+# Update an existing fine
+async def update_fine(fine: Fines) -> Fines:
+    await ensure_connection()
+    query = f"""
+    UPDATE {TABLE_NAME}
+    SET AmountFined = :AmountFined,
+        DaysOverdue = :DaysOverdue,
+        LoanID = :LoanID
+    WHERE FineID = :FineID
     """
-    try:
-        await database.execute(query=query, values={
-            "FineID": FineID,
-            "AmountFined": AmountFined,
-            "DaysOverdue": DaysOverdue,
-            "LoanID": LoanID
-        })
-        return True
-    except Exception as err:
-        raise ValueError(f"Error updating fine {FineID}: {err}")
-    
-# DELETE fine
-async def delete_fine(FineID: int) -> bool:
-    query = """
-        DELETE FROM Fines 
-        WHERE FineID = :FineID
-    """
-    try:
-        await database.execute(query=query, values={"FineID": FineID})
-        return True
-    except Exception as err:
-        raise ValueError(f"Error deleting fine {FineID}: {err}")
-    
-# READ fines by LoanID
-async def get_fines_by_loan(LoanID: int):
-    query = """
-        SELECT FineID, AmountFined, DaysOverdue, LoanID
-        FROM Fines
-        WHERE LoanID = :LoanID
-    """
-    return await database.fetch_all(query=query, values={"LoanID": LoanID})
+    result = await database.execute(query=query, values=fine.dict())
+    return fine
+
+
+# Delete a fine by FineID
+async def delete_fine(fine_id: int):
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE FineID = :fine_id"
+    await database.execute(query=query, values={"fine_id": fine_id})

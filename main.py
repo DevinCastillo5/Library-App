@@ -56,6 +56,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
+@app.on_event("startup")
+async def startup():
+    await database.connect()
+
+@app.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+
 # ================================
 # CORS (for frontend dev)
 # ================================
@@ -82,9 +90,36 @@ async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.get("/authors", response_class=HTMLResponse)
+@app.get("/authors-testing", response_class=HTMLResponse)
 async def read_authors(request: Request):
-    return templates.TemplateResponse("authors.html", {"request": request})
+    return templates.TemplateResponse("testing/authors_testing.html", {"request": request})
+@app.get("/book_authors-testing", response_class=HTMLResponse)
+async def read_book_authors(request: Request):
+    return templates.TemplateResponse("testing/book_authors_testing.html", {"request": request})
+@app.get("/books-testing", response_class=HTMLResponse)
+async def read_books(request: Request):
+    return templates.TemplateResponse("testing/books_testing.html", {"request": request})
+@app.get("/copies-testing", response_class=HTMLResponse)
+async def read_copies(request: Request):
+    return templates.TemplateResponse("testing/copies_testing.html", {"request": request})
+@app.get("/fines-testing", response_class=HTMLResponse)
+async def read_fines(request: Request):
+    return templates.TemplateResponse("testing/fines_testing.html", {"request": request})
+@app.get("/loans-testing", response_class=HTMLResponse)
+async def read_loans(request: Request):
+    return templates.TemplateResponse("testing/loans_testing.html", {"request": request})
+@app.get("/members-testing", response_class=HTMLResponse)
+async def read_members(request: Request):
+    return templates.TemplateResponse("testing/members_testing.html", {"request": request})
+@app.get("/publishers-testing", response_class=HTMLResponse)
+async def read_publishers(request: Request):
+    return templates.TemplateResponse("testing/publishers_testing.html", {"request": request})
+@app.get("/reservations-testing", response_class=HTMLResponse)
+async def read_reservations(request: Request):
+    return templates.TemplateResponse("testing/reservations_testing.html", {"request": request})
+@app.get("/staff-testing", response_class=HTMLResponse)
+async def read_staff(request: Request):
+    return templates.TemplateResponse("testing/staff_testing.html", {"request": request})
 
 
 # ================================

@@ -1,51 +1,44 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from database import database
 from schemas.fines import Fines
-from crud.fines_crud import (
-    get_fine, create_fine, update_fine, delete_fine, get_fines_by_loan
-)
+from crud.fines_crud import get_fines, get_fine, create_fine, update_fine, delete_fine
 
-router = APIRouter(prefix="/api/fines", tags=["Fines"])
+router = APIRouter(prefix="/api/fines", tags=["fines"])
 
-# GET one fine by FineID
-@router.get("/{FineID}", response_model=Fines)
-async def api_get_fine(FineID: int):
-    async with database:
-        fine = await get_fine(FineID)
-        if not fine:
-            raise HTTPException(status_code=404, detail="Fine not found")
-        return Fines(**fine)
-    
-# POST: Create new fine
+# GET all fines
+@router.get("/", response_model=List[Fines])
+async def api_get_fines(skip: int = 0, limit: int = 100):
+    return await get_fines(skip, limit)
+
+# GET single fine
+@router.get("/{fine_id}", response_model=Fines)
+async def api_get_fine(fine_id: int):
+    fine = await get_fine(fine_id)
+    if not fine:
+        raise HTTPException(status_code=404, detail="Fine not found")
+    return fine
+
+# POST create fine
 @router.post("/", response_model=Fines)
 async def api_create_fine(fine: Fines):
-    async with database:
-        new_fine_id = await create_fine(fine.FineID, fine.LoanID, fine.Amount, fine.Paid)
-        return Fines(**fine.dict())
+    existing = await get_fine(fine.FineID)
+    if existing:
+        raise HTTPException(status_code=400, detail="Fine already exists")
+    return await create_fine(fine)
 
-# PUT: Update existing fine
+# PUT update fine
 @router.put("/", response_model=Fines)
 async def api_update_fine(fine: Fines):
-    async with database:
-        try:
-            await update_fine(fine.FineID, fine.LoanID, fine.Amount, fine.Paid)
-            return fine
-        except ValueError as err:
-            raise HTTPException(status_code=400, detail=str(err))
+    existing = await get_fine(fine.FineID)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Fine not found")
+    return await update_fine(fine)
 
-# DELETE: Delete a single fine
-@router.delete("/{FineID}")
-async def api_delete_fine(FineID: int):
-    async with database:
-        deleted = await delete_fine(FineID)
-        if not deleted:
-            raise HTTPException(status_code=404, detail="Fine not found")
-        return {"detail": f"Fine '{FineID}' deleted"}
-
-# GET fines by LoanID
-@router.get("/loan/{LoanID}", response_model=List[Fines])
-async def api_get_fines_by_loan(LoanID: int):
-    async with database:
-        rows = await get_fines_by_loan(LoanID)
-        return [Fines(**dict(r)) for r in rows]
+# DELETE fine
+@router.delete("/{fine_id}")
+async def api_delete_fine(fine_id: int):
+    existing = await get_fine(fine_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Fine not found")
+    await delete_fine(fine_id)
+    return {"detail": "Fine deleted"}
