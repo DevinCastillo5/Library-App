@@ -82,12 +82,9 @@ async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-# ================================
-# DEBUG ROUTE (optional)
-# ================================
-@app.get("/debug-authors")
-async def debug_authors():
-    return await database.fetch_all("SELECT * FROM Authors")
+@app.get("/authors", response_class=HTMLResponse)
+async def read_authors(request: Request):
+    return templates.TemplateResponse("authors.html", {"request": request})
 
 
 # ================================
@@ -128,4 +125,4 @@ admin.mount_to(app)
 # RUN SERVER
 # ================================
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8007, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8008, reload=True)
