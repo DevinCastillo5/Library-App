@@ -70,7 +70,7 @@
 
     <script>
       async function loadBooks() {
-        const url = "/api/books/available"; // API endpoint for available books
+        const url = "/api/books/available";
         try {
           const res = await fetch(url);
           const books = await res.json();

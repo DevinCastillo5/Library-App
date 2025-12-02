@@ -22,52 +22,62 @@
         margin-top: 15px;
         padding: 10px 20px;
       }
-      a {
-        display: inline-block;
-        margin-top: 20px;
+      #message {
+        margin-top: 15px;
+        color: green;
       }
     </style>
   </head>
+
   <body>
     <h1>Member Sign Up</h1>
 
-    <form method="POST" action="/member/signup">
+    <form onsubmit="event.preventDefault(); createMember();">
       <label>Name:</label>
-      <input type="text" name="memName" required />
+      <input type="text" id="memName" required />
 
       <label>Email:</label>
-      <input type="email" name="Email" required />
+      <input type="email" id="email" required />
 
       <label>Phone:</label>
-      <input type="text" name="Phone" required />
+      <input type="text" id="phone" required />
 
       <label>Address:</label>
-      <input type="text" name="Address" required />
+      <input type="text" id="address" required />
 
-      <button onclick="createMember()">Sign Up</button>
+      <button type="submit">Sign Up</button>
     </form>
 
+    <div id="message"></div>
+
     <a href="/">⬅ Back to Home</a>
+
     <script>
       const API_URL = "/api/members";
 
       async function createMember() {
         const member = {
-          memberID: parseInt(document.getElementById("memberID").value),
+          memberID: 0, // ignored but required by backend model
           memName: document.getElementById("memName").value,
           Email: document.getElementById("email").value,
           Phone: document.getElementById("phone").value,
           Address: document.getElementById("address").value,
         };
+
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(member),
         });
+
         if (res.ok) {
           document.getElementById("message").innerText =
             "Member created successfully!";
-          loadMembers();
+
+          // Redirect after success (optional)
+          setTimeout(() => {
+            window.location.href = "/member/home";
+          }, 1000);
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;

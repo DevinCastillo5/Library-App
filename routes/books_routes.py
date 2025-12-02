@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 from schemas.books import Books
 from crud.books_crud import get_books, get_book, create_book, update_book, delete_book
+from crud.books_crud import get_books_available_for_loan, get_books_on_loan
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
@@ -10,13 +11,16 @@ router = APIRouter(prefix="/api/books", tags=["books"])
 async def api_get_books(skip: int = 0, limit: int = 100):
     return await get_books(skip, limit)
 
-# GET single book
-@router.get("/{isbn}", response_model=Books)
-async def api_get_book(isbn: str):
-    book = await get_book(isbn)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return book
+# GET books available for loan
+@router.get("/available", response_model=List[Books])
+async def api_get_books_available_for_loan(skip: int = 0, limit: int = 100):
+    return await get_books_available_for_loan(skip, limit)
+
+# GET books currently on loan (need reservation)
+@router.get("/on-loan", response_model=List[Books])
+async def api_get_books_on_loan(skip: int = 0, limit: int = 100):
+    return await get_books_on_loan(skip, limit)
+
 
 # POST create book
 @router.post("/", response_model=Books)
@@ -43,15 +47,10 @@ async def api_delete_book(isbn: str):
     await delete_book(isbn)
     return {"detail": "Book deleted"}
 
-from crud.books_crud import get_books_available_for_loan, get_books_on_loan
-
-# GET books available for loan
-@router.get("/available", response_model=List[Books])
-async def api_get_books_available_for_loan(skip: int = 0, limit: int = 100):
-    return await get_books_available_for_loan(skip, limit)
-
-
-# GET books currently on loan (need reservation)
-@router.get("/on-loan", response_model=List[Books])
-async def api_get_books_on_loan(skip: int = 0, limit: int = 100):
-    return await get_books_on_loan(skip, limit)
+# GET single book
+@router.get("/{isbn}", response_model=Books)
+async def api_get_book(isbn: str):
+    book = await get_book(isbn)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
