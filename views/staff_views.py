@@ -10,7 +10,7 @@ from database import database
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-class ReservationsView(BaseModelView):
+class StaffView(BaseModelView):
     # ===================================================================
     # BASIC CONFIGURATION
     # ===================================================================
