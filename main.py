@@ -10,10 +10,12 @@ from database import database, DATABASE_URL
 from views.authors_view import AuthorsView
 from views.loans_view import LoansView
 from views.book_authors_view import BookAuthorsView
+from views.reservations_view import ReservationsView
+from views.staff_views import StaffViews
+from views.fines_view import FinesView
 
 # Import Admin from Starlette Admin
 from starlette_admin.contrib.sqla import Admin
-
 
 # ================================
 # LIFESPAN: Connect/Disconnect DB
