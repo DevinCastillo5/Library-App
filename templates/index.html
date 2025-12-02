@@ -1,76 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title>Library DB Tester</title>
+    <meta charset="UTF-8" />
+    <title>Library Portal</title>
     <style>
       body {
-        font-family: Arial, sans-serif;
-        padding: 40px;
+        font-family: Verdana, sans-serif;
+        text-align: center;
+        padding: 50px;
       }
-      h1 {
-        margin-bottom: 20px;
-      }
-      .card {
-        margin: 10px 0;
-        padding: 15px;
-        border: 1px solid #ddd;
-        width: 250px;
-        border-radius: 8px;
-        background: #f9f9f9;
-      }
-      a {
+      .button {
+        display: inline-block;
+        margin: 10px;
+        padding: 15px 25px;
+        background-color: #4285f4;
+        color: white;
         text-decoration: none;
-        color: #333;
+        border-radius: 6px;
         font-size: 18px;
-        font-weight: bold;
       }
-      a:hover {
-        color: #007bff;
+      .button:hover {
+        background-color: #3367d6;
       }
     </style>
   </head>
   <body>
-    <h1>📚 Library Database Tester</h1>
-    <p>Select which table you want to test:</p>
+    <h1>Welcome to The Library</h1>
+    <p>Owned by: Devin Castillo, Jeanette Barboza, Paul PeraltaMordan</p>
+    <a class="button" href="http://127.0.0.1:8008/member/home"
+      >Continue as Member</a
+    >
+    <a class="button" href="http://127.0.0.1:8008/staff">Continue as Staff</a>
 
-    <div class="card">
-      <a href="http://127.0.0.1:8008/authors-testing">Authors</a>
-    </div>
+    <br /><br />
 
-    <div class="card">
-      <a href="http://127.0.0.1:8008/books-testing">Books</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/loans-testing">Loans</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/book_authors-testing">Book_Authors</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/members-testing">Members</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/copies-testing">Copies</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/fines-testing">Fines</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/publishers-testing">Publishers</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/reservations-testing">Reservations</a>
-    </div>
-
-    <div class="card">
-      <a href="http://127.0.0.1:8008/staff-testing">Staff</a>
-    </div>
+    <p>Not A Member Yet? Sign Up Here:</p>
+    <a
+      class="button"
+      href="http://127.0.0.1:8008/member/signup"
+      style="background-color: #34a853"
+      >Sign Up</a
+    >
   </body>
 </html>

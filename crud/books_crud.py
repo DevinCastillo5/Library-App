@@ -70,3 +70,31 @@ async def delete_book(isbn: str) -> None:
     await ensure_connection()
     query = f"DELETE FROM {TABLE_NAME} WHERE ISBN = :isbn"
     await database.execute(query=query, values={"isbn": isbn})
+
+async def get_books_available_for_loan(skip: int = 0, limit: int = 100) -> List[Books]:
+    await ensure_connection()
+    query = """
+        SELECT DISTINCT b.ISBN, b.Title, b.Categories, b.PublishYear, b.PublishName
+        FROM Books b
+        INNER JOIN Copies c ON b.ISBN = c.ISBN
+        LEFT JOIN Loans l ON c.CopyID = l.CopyID AND l.ReturnDate IS NULL
+        WHERE l.LoanID IS NULL
+        LIMIT :limit OFFSET :skip
+    """
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    return [Books(**dict(row)) for row in rows]
+
+
+# Books currently on loan (need to reserve)
+async def get_books_on_loan(skip: int = 0, limit: int = 100) -> List[Books]:
+    await ensure_connection()
+    query = """
+        SELECT DISTINCT b.ISBN, b.Title, b.Categories, b.PublishYear, b.PublishName
+        FROM Books b
+        INNER JOIN Copies c ON b.ISBN = c.ISBN
+        INNER JOIN Loans l ON c.CopyID = l.CopyID
+        WHERE l.ReturnDate IS NULL
+        LIMIT :limit OFFSET :skip
+    """
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    return [Books(**dict(row)) for row in rows]

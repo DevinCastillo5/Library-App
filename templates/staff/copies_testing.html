@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Copies CRUD Test</title>
+    <title>Copies</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <h1>Copies CRUD Test</h1>
+    <h1>Copies</h1>
 
     <h2>Add / Update Copy</h2>
     <label>CopyID: <input type="number" id="copyID" /></label>
@@ -43,6 +43,10 @@
     <label>Condition: <input type="text" id="conditionDesc" /></label>
     <button onclick="createCopy()">Create</button>
     <button onclick="updateCopy()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
 
     <h2>Copies List</h2>
     <table id="copiesTable">

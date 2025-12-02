@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Reservations CRUD Test</title>
+    <title>Reservations</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <h1>Reservations CRUD Test</h1>
+    <h1>Reservations</h1>
 
     <h2>Add / Update Reservation</h2>
     <label>Reservation ID: <input type="number" id="reservationID" /></label>
@@ -45,6 +45,10 @@
     /></label>
     <button onclick="createReservation()">Create</button>
     <button onclick="updateReservation()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
 
     <h2>Reservations List</h2>
     <table id="reservationsTable">

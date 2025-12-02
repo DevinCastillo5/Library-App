@@ -89,38 +89,53 @@ templates = Jinja2Templates(directory="templates")
 async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+@app.get("/member/home", response_class=HTMLResponse)
+async def members_home(request: Request):
+    return templates.TemplateResponse("member_home.html", {"request": request})
+@app.get("/member/signup", response_class=HTMLResponse)
+async def members_signup(request: Request):
+    return templates.TemplateResponse("signup.html", {"request": request})
+@app.get("/member/available", response_class=HTMLResponse)
+async def member_available(request: Request):
+    return templates.TemplateResponse("member_available.html", {"request": request})
+@app.get("/member/on-loan", response_class=HTMLResponse)
+async def member_on_loan(request: Request):
+    return templates.TemplateResponse("member_on_loan.html", {"request": request})
 
-@app.get("/authors-testing", response_class=HTMLResponse)
+# staff
+@app.get("/staff", response_class=HTMLResponse)
 async def read_authors(request: Request):
-    return templates.TemplateResponse("testing/authors_testing.html", {"request": request})
-@app.get("/book_authors-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff_home.html", {"request": request})
+@app.get("/authors", response_class=HTMLResponse)
+async def read_authors(request: Request):
+    return templates.TemplateResponse("staff/authors_testing.html", {"request": request})
+@app.get("/book_authors", response_class=HTMLResponse)
 async def read_book_authors(request: Request):
-    return templates.TemplateResponse("testing/book_authors_testing.html", {"request": request})
-@app.get("/books-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/book_authors_testing.html", {"request": request})
+@app.get("/books", response_class=HTMLResponse)
 async def read_books(request: Request):
-    return templates.TemplateResponse("testing/books_testing.html", {"request": request})
-@app.get("/copies-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/books_testing.html", {"request": request})
+@app.get("/copies", response_class=HTMLResponse)
 async def read_copies(request: Request):
-    return templates.TemplateResponse("testing/copies_testing.html", {"request": request})
-@app.get("/fines-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/copies_testing.html", {"request": request})
+@app.get("/fines", response_class=HTMLResponse)
 async def read_fines(request: Request):
-    return templates.TemplateResponse("testing/fines_testing.html", {"request": request})
-@app.get("/loans-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/fines_testing.html", {"request": request})
+@app.get("/loans", response_class=HTMLResponse)
 async def read_loans(request: Request):
-    return templates.TemplateResponse("testing/loans_testing.html", {"request": request})
-@app.get("/members-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/loans_testing.html", {"request": request})
+@app.get("/members", response_class=HTMLResponse)
 async def read_members(request: Request):
-    return templates.TemplateResponse("testing/members_testing.html", {"request": request})
-@app.get("/publishers-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/members_testing.html", {"request": request})
+@app.get("/publishers", response_class=HTMLResponse)
 async def read_publishers(request: Request):
-    return templates.TemplateResponse("testing/publishers_testing.html", {"request": request})
-@app.get("/reservations-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/publishers_testing.html", {"request": request})
+@app.get("/reservations", response_class=HTMLResponse)
 async def read_reservations(request: Request):
-    return templates.TemplateResponse("testing/reservations_testing.html", {"request": request})
-@app.get("/staff-testing", response_class=HTMLResponse)
+    return templates.TemplateResponse("staff/reservations_testing.html", {"request": request})
+@app.get("/staff", response_class=HTMLResponse)
 async def read_staff(request: Request):
-    return templates.TemplateResponse("testing/staff_testing.html", {"request": request})
-
+    return templates.TemplateResponse("staff/staff_testing.html", {"request": request})
 
 # ================================
 # REGISTER API ROUTERS

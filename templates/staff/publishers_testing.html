@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Authors CRUD Test</title>
+    <title>Publishers</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,22 +34,24 @@
     </style>
   </head>
   <body>
-    <h1>Authors CRUD Test</h1>
+    <h1>Publishers</h1>
 
-    <h2>Add / Update Author</h2>
-    <label>Author Name: <input type="text" id="authorName" /></label>
-    <label>DOB (YYYY-MM-DD): <input type="text" id="dob" /></label>
-    <label>Nationality: <input type="text" id="nationality" /></label>
-    <button onclick="createAuthor()">Create</button>
-    <button onclick="updateAuthor()">Update</button>
+    <h2>Add / Update Publisher</h2>
+    <label>Publisher Name: <input type="text" id="publishName" /></label>
+    <label>Contact Info: <input type="text" id="contactInfo" /></label>
+    <button onclick="createPublisher()">Create</button>
+    <button onclick="updatePublisher()">Update</button>
 
-    <h2>Authors List</h2>
-    <table id="authorsTable">
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
+
+    <h2>Publishers List</h2>
+    <table id="publishersTable">
       <thead>
         <tr>
-          <th>Author Name</th>
-          <th>DOB</th>
-          <th>Nationality</th>
+          <th>Publisher Name</th>
+          <th>Contact Info</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -59,83 +61,80 @@
     <div id="message"></div>
 
     <script>
-      const API_URL = "/api/authors";
+      const API_URL = "/api/publishers";
 
-      // Fetch and display all authors
-      async function loadAuthors() {
+      // Fetch and display all publishers
+      async function loadPublishers() {
         const res = await fetch(API_URL);
-        const authors = await res.json();
-        const tbody = document.querySelector("#authorsTable tbody");
+        const publishers = await res.json();
+        const tbody = document.querySelector("#publishersTable tbody");
         tbody.innerHTML = "";
-        authors.forEach((author) => {
+        publishers.forEach((pub) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${author.AuthorName}</td>
-            <td>${author.DOB || ""}</td>
-            <td>${author.Nationality || ""}</td>
+            <td>${pub.PublishName}</td>
+            <td>${pub.ContactInfo || ""}</td>
             <td>
-                <button onclick="deleteAuthor('${
-                  author.AuthorName
+                <button onclick="deletePublisher('${
+                  pub.PublishName
                 }')">Delete</button>
             </td>
-        `;
+          `;
           tbody.appendChild(tr);
         });
       }
 
-      // Create new author
-      async function createAuthor() {
-        const author = {
-          AuthorName: document.getElementById("authorName").value,
-          DOB: document.getElementById("dob").value,
-          Nationality: document.getElementById("nationality").value,
+      // Create new publisher
+      async function createPublisher() {
+        const publisher = {
+          PublishName: document.getElementById("publishName").value,
+          ContactInfo: document.getElementById("contactInfo").value,
         };
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(author),
+          body: JSON.stringify(publisher),
         });
         if (res.ok) {
           document.getElementById("message").innerText =
-            "Author created successfully!";
-          loadAuthors();
+            "Publisher created successfully!";
+          loadPublishers();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
         }
       }
 
-      // Update author
-      async function updateAuthor() {
-        const author = {
-          AuthorName: document.getElementById("authorName").value,
-          DOB: document.getElementById("dob").value,
-          Nationality: document.getElementById("nationality").value,
+      // Update publisher
+      async function updatePublisher() {
+        const publisher = {
+          PublishName: document.getElementById("publishName").value,
+          ContactInfo: document.getElementById("contactInfo").value,
         };
         const res = await fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(author),
+          body: JSON.stringify(publisher),
         });
         if (res.ok) {
           document.getElementById("message").innerText =
-            "Author updated successfully!";
-          loadAuthors();
+            "Publisher updated successfully!";
+          loadPublishers();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
         }
       }
 
-      // Delete author
-      async function deleteAuthor(name) {
-        if (!confirm(`Delete author "${name}"?`)) return;
+      // Delete publisher
+      async function deletePublisher(name) {
+        if (!confirm(`Delete publisher "${name}"?`)) return;
         const res = await fetch(`${API_URL}/${encodeURIComponent(name)}`, {
           method: "DELETE",
         });
         if (res.ok) {
-          document.getElementById("message").innerText = "Author deleted!";
-          loadAuthors();
+          document.getElementById("message").innerText = "Publisher deleted!";
+          loadPublishers();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
@@ -143,7 +142,7 @@
       }
 
       // Initial load
-      loadAuthors();
+      loadPublishers();
     </script>
   </body>
 </html>

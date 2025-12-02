@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Book Authors CRUD Test</title>
+    <title>Authors</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,20 +34,26 @@
     </style>
   </head>
   <body>
-    <h1>Book Authors CRUD Test</h1>
+    <h1>Authors</h1>
 
-    <h2>Add / Update Book-Author Pair</h2>
-    <label>ISBN: <input type="text" id="isbn" /></label>
+    <h2>Add / Update Author</h2>
     <label>Author Name: <input type="text" id="authorName" /></label>
-    <button onclick="createBookAuthor()">Create</button>
-    <button onclick="updateBookAuthor()">Update</button>
+    <label>DOB (YYYY-MM-DD): <input type="text" id="dob" /></label>
+    <label>Nationality: <input type="text" id="nationality" /></label>
+    <button onclick="createAuthor()">Create</button>
+    <button onclick="updateAuthor()">Update</button>
 
-    <h2>Book-Authors List</h2>
-    <table id="bookAuthorsTable">
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
+
+    <h2>Authors List</h2>
+    <table id="authorsTable">
       <thead>
         <tr>
-          <th>ISBN</th>
           <th>Author Name</th>
+          <th>DOB</th>
+          <th>Nationality</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -57,82 +63,83 @@
     <div id="message"></div>
 
     <script>
-      const API_URL = "/api/book-authors";
+      const API_URL = "/api/authors";
 
-      // Fetch and display all book-author pairs
-      async function loadBookAuthors() {
+      // Fetch and display all authors
+      async function loadAuthors() {
         const res = await fetch(API_URL);
-        const pairs = await res.json();
-        const tbody = document.querySelector("#bookAuthorsTable tbody");
+        const authors = await res.json();
+        const tbody = document.querySelector("#authorsTable tbody");
         tbody.innerHTML = "";
-        pairs.forEach((pair) => {
+        authors.forEach((author) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${pair.ISBN}</td>
-            <td>${pair.AuthorName}</td>
+            <td>${author.AuthorName}</td>
+            <td>${author.DOB || ""}</td>
+            <td>${author.Nationality || ""}</td>
             <td>
-                <button onclick="deleteBookAuthor('${pair.ISBN}','${pair.AuthorName}')">Delete</button>
+                <button onclick="deleteAuthor('${
+                  author.AuthorName
+                }')">Delete</button>
             </td>
-          `;
+        `;
           tbody.appendChild(tr);
         });
       }
 
-      // Create new pair
-      async function createBookAuthor() {
-        const pair = {
-          ISBN: document.getElementById("isbn").value,
+      // Create new author
+      async function createAuthor() {
+        const author = {
           AuthorName: document.getElementById("authorName").value,
+          DOB: document.getElementById("dob").value,
+          Nationality: document.getElementById("nationality").value,
         };
         const res = await fetch(API_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(pair),
+          body: JSON.stringify(author),
         });
         if (res.ok) {
           document.getElementById("message").innerText =
-            "Pair created successfully!";
-          loadBookAuthors();
+            "Author created successfully!";
+          loadAuthors();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
         }
       }
 
-      // Update pair (delete + create)
-      async function updateBookAuthor() {
-        const pair = {
-          ISBN: document.getElementById("isbn").value,
+      // Update author
+      async function updateAuthor() {
+        const author = {
           AuthorName: document.getElementById("authorName").value,
+          DOB: document.getElementById("dob").value,
+          Nationality: document.getElementById("nationality").value,
         };
         const res = await fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(pair),
+          body: JSON.stringify(author),
         });
         if (res.ok) {
           document.getElementById("message").innerText =
-            "Pair updated successfully!";
-          loadBookAuthors();
+            "Author updated successfully!";
+          loadAuthors();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
         }
       }
 
-      // Delete pair
-      async function deleteBookAuthor(isbn, author) {
-        if (!confirm(`Delete pair ISBN "${isbn}" & Author "${author}"?`))
-          return;
-        const res = await fetch(
-          `${API_URL}/${isbn}/${encodeURIComponent(author)}`,
-          {
-            method: "DELETE",
-          }
-        );
+      // Delete author
+      async function deleteAuthor(name) {
+        if (!confirm(`Delete author "${name}"?`)) return;
+        const res = await fetch(`${API_URL}/${encodeURIComponent(name)}`, {
+          method: "DELETE",
+        });
         if (res.ok) {
-          document.getElementById("message").innerText = "Pair deleted!";
-          loadBookAuthors();
+          document.getElementById("message").innerText = "Author deleted!";
+          loadAuthors();
         } else {
           const err = await res.json();
           document.getElementById("message").innerText = "Error: " + err.detail;
@@ -140,7 +147,7 @@
       }
 
       // Initial load
-      loadBookAuthors();
+      loadAuthors();
     </script>
   </body>
 </html>

@@ -42,3 +42,16 @@ async def api_delete_book(isbn: str):
         raise HTTPException(status_code=404, detail="Book not found")
     await delete_book(isbn)
     return {"detail": "Book deleted"}
+
+from crud.books_crud import get_books_available_for_loan, get_books_on_loan
+
+# GET books available for loan
+@router.get("/available", response_model=List[Books])
+async def api_get_books_available_for_loan(skip: int = 0, limit: int = 100):
+    return await get_books_available_for_loan(skip, limit)
+
+
+# GET books currently on loan (need reservation)
+@router.get("/on-loan", response_model=List[Books])
+async def api_get_books_on_loan(skip: int = 0, limit: int = 100):
+    return await get_books_on_loan(skip, limit)

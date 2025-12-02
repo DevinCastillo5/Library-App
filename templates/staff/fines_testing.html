@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Fines CRUD Test</title>
+    <title>Fines</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <h1>Fines CRUD Test</h1>
+    <h1>Fines</h1>
 
     <h2>Add / Update Fine</h2>
     <label>Fine ID: <input type="number" id="fineID" /></label>
@@ -43,6 +43,10 @@
     <label>Loan ID: <input type="number" id="loanID" /></label>
     <button onclick="createFine()">Create</button>
     <button onclick="updateFine()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
 
     <h2>Fines List</h2>
     <table id="finesTable">

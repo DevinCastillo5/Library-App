@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Loans CRUD Test</title>
+    <title>Loans</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <h1>Loans CRUD Test</h1>
+    <h1>Loans</h1>
 
     <h2>Add / Update Loan</h2>
     <label>Loan ID: <input type="number" id="loanID" /></label>
@@ -45,6 +45,10 @@
     <label>Copy ID: <input type="number" id="copyID" /></label>
     <button onclick="createLoan()">Create</button>
     <button onclick="updateLoan()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
 
     <h2>Loans List</h2>
     <table id="loansTable">

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Members CRUD Test</title>
+    <title>Members</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -34,7 +34,7 @@
     </style>
   </head>
   <body>
-    <h1>Members CRUD Test</h1>
+    <h1>Members</h1>
 
     <h2>Add / Update Member</h2>
     <label>Member ID: <input type="number" id="memberID" /></label>
@@ -44,6 +44,10 @@
     <label>Address: <input type="text" id="address" /></label>
     <button onclick="createMember()">Create</button>
     <button onclick="updateMember()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
 
     <h2>Members List</h2>
     <table id="membersTable">
