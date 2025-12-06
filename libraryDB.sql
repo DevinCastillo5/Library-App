@@ -68,20 +68,20 @@ CREATE TABLE Staff (
     WorkTime INT
 );
 
-
-
-
 CREATE TABLE Reservations (
-    ReservationID INT PRIMARY KEY,
-    DateFor DATE,
+    ReservationID INT AUTO_INCREMENT PRIMARY KEY,
+    ReserveDate DATE,
     MemberID INT,
-    BookReserved CHAR(13),
+    ISBN CHAR(13),
+    CopyID INT,
     FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
-    FOREIGN KEY (BookReserved) REFERENCES Books(ISBN)
+    FOREIGN KEY (ISBN) REFERENCES Books(ISBN),
+    FOREIGN KEY (CopyID) REFERENCES Copies(CopyID)
 );
 
+
 CREATE TABLE Loans (
-    LoanID INT PRIMARY KEY,
+    LoanID INT AUTO_INCREMENT PRIMARY KEY,
     ReturnDate DATE,
     ISBN CHAR(13),
     MemberID INT,
@@ -92,6 +92,7 @@ CREATE TABLE Loans (
     FOREIGN KEY (StaffID) REFERENCES Staff(StaffID),
     FOREIGN KEY (CopyID) REFERENCES Copies(CopyID)
 );
+
 
 CREATE TABLE Fines (
     FineID INT PRIMARY KEY,

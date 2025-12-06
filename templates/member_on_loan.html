@@ -93,38 +93,38 @@
         }
       }
 
-      async function reserveBook(isbn) {
+        async function reserveBook(isbn) {
         const memberID = prompt("Enter your Member ID to reserve this book:");
         if (!memberID) return;
 
-        const today = new Date().toISOString().split("T")[0];
-
         try {
-          const res = await fetch("/api/reservations/", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              BookReserved: isbn,
-              memberID: parseInt(memberID),
-              DateFor: today,
-            }),
-          });
+        const res = await fetch("/api/reservations/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+        ISBN: isbn,
+        MemberID: parseInt(memberID)
+        }),
+        });
 
-          if (res.ok) {
-            document.getElementById("message").innerText =
-              "Book reserved successfully!";
-            loadBooks();
-          } else {
-            const err = await res.json();
-            document.getElementById("message").innerText =
-              "Error: " + err.detail;
-          }
-        } catch (error) {
-          document.getElementById("message").innerText =
-            "Error reserving book.";
-          console.error(error);
+        if (res.ok) {
+        document.getElementById("message").innerText =
+        "Book reserved successfully!";
+        loadBooks();
+        } else {
+        const err = await res.json();
+        document.getElementById("message").innerText =
+        "Error: " + JSON.stringify(err);
         }
-      }
+        } catch (error) {
+        document.getElementById("message").innerText =
+        "Error reserving book.";
+        console.error(error);
+        }
+        }
+
+
+
 
       // Initial load
       loadBooks();
