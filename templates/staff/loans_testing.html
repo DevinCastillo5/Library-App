@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Loans</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Loans</h1>
+
+    <h2>Add / Update Loan</h2>
+    <label>Loan ID: <input type="number" id="loanID" /></label>
+    <label>Return Date: <input type="date" id="returnDate" /></label>
+    <label>ISBN: <input type="text" id="isbn" /></label>
+    <label>Member ID: <input type="number" id="memberID" /></label>
+    <label>Staff ID: <input type="number" id="staffID" /></label>
+    <label>Copy ID: <input type="number" id="copyID" /></label>
+    <button onclick="createLoan()">Create</button>
+    <button onclick="updateLoan()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
+
+    <h2>Loans List</h2>
+    <table id="loansTable">
+      <thead>
+        <tr>
+          <th>Loan ID</th>
+          <th>Return Date</th>
+          <th>ISBN</th>
+          <th>Member ID</th>
+          <th>Staff ID</th>
+          <th>Copy ID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      const API_URL = "/api/loans";
+
+      // Fetch and display all loans
+      async function loadLoans() {
+        const res = await fetch(API_URL);
+        const loans = await res.json();
+        const tbody = document.querySelector("#loansTable tbody");
+        tbody.innerHTML = "";
+        loans.forEach((loan) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${loan.LoanID}</td>
+            <td>${loan.ReturnDate || ""}</td>
+            <td>${loan.ISBN || ""}</td>
+            <td>${loan.MemberID || ""}</td>
+            <td>${loan.StaffID || ""}</td>
+            <td>${loan.CopyID || ""}</td>
+            <td>
+                <button onclick="deleteLoan(${loan.LoanID})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Create new loan
+      async function createLoan() {
+        const loan = {
+          LoanID: parseInt(document.getElementById("loanID").value),
+          ReturnDate: document.getElementById("returnDate").value || null,
+          ISBN: document.getElementById("isbn").value || null,
+          MemberID: parseInt(document.getElementById("memberID").value) || null,
+          StaffID: parseInt(document.getElementById("staffID").value) || null,
+          CopyID: parseInt(document.getElementById("copyID").value) || null,
+        };
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(loan),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Loan created successfully!";
+          loadLoans();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Update loan
+      async function updateLoan() {
+        const loan = {
+          LoanID: parseInt(document.getElementById("loanID").value),
+          ReturnDate: document.getElementById("returnDate").value || null,
+          ISBN: document.getElementById("isbn").value || null,
+          MemberID: parseInt(document.getElementById("memberID").value) || null,
+          StaffID: parseInt(document.getElementById("staffID").value) || null,
+          CopyID: parseInt(document.getElementById("copyID").value) || null,
+        };
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(loan),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Loan updated successfully!";
+          loadLoans();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Delete loan
+      async function deleteLoan(loanID) {
+        if (!confirm(`Delete loan ID "${loanID}"?`)) return;
+        const res = await fetch(`${API_URL}/${loanID}`, { method: "DELETE" });
+        if (res.ok) {
+          document.getElementById("message").innerText = "Loan deleted!";
+          loadLoans();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Initial load
+      loadLoans();
+    </script>
+  </body>
+</html>

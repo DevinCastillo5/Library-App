@@ -80,30 +80,63 @@ class AuthorsView(BaseModelView):
         limit: int = 100,
         where: Optional[Any] = None,
         order_by: Optional[List[Any]] = None,
-    ) -> List[Any]:
+        ) -> List[Any]:
+
+        # ---- ORDERING ----
+        order_sql = ""
+        if order_by:
+            try:
+                ord = order_by[0]
+                field = ord.get("field")
+                direction = ord.get("direction", "asc").upper()
+                if field in ["AuthorName", "DOB", "Nationality"]:
+                    order_sql = f" ORDER BY {field} {direction}"
+            except Exception as e:
+                logger.debug(f"order_by parse failed: {e}")
+
+        # ---- SEARCH (Starlette-Admin sends JSON-like dicts) ----
+        search_term = None
+        if where and isinstance(where, dict):
+            # Starlette-Admin search format:
+            # {"$or":[{"AuthorName":{"$icontains":"abc"}}]}
+            try:
+                cond = where["$or"][0]
+                field, expr = next(iter(cond.items()))
+                search_term = expr.get("$icontains")
+            except Exception as e:
+                logger.debug(f"search parse failed: {e}")
+
+        # ---- SQL ----
         async with database:
-            if where and isinstance(where, (str, int)) and str(where).strip():
-                search_term = str(where).strip()
-                query = """
+
+            if search_term:
+                query = f"""
                     SELECT AuthorName, DOB, Nationality
                     FROM Authors
-                    WHERE AuthorName LIKE :search OR Nationality LIKE :search
+                    WHERE AuthorName LIKE :search
+                        OR Nationality LIKE :search
+                    {order_sql}
                     LIMIT :limit OFFSET :skip
                 """
                 rows = await database.fetch_all(
                     query=query,
                     values={"search": f"%{search_term}%", "limit": limit, "skip": skip},
                 )
+
             else:
-                query = """
+                query = f"""
                     SELECT AuthorName, DOB, Nationality
                     FROM Authors
+                    {order_sql}
                     LIMIT :limit OFFSET :skip
                 """
                 rows = await database.fetch_all(
-                    query=query, values={"limit": limit, "skip": skip}
+                    query=query,
+                    values={"limit": limit, "skip": skip},
                 )
-            return [dict(row) for row in rows]
+
+        return [dict(row) for row in rows]
+
 
     # ===================================================================
     # COUNT TOTAL RECORDS

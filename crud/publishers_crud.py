@@ -1,65 +1,64 @@
-from database import database
+# crud/publishers_crud.py
+from typing import List
+from fastapi import HTTPException
+from databases import Database
+from schemas.publishers import Publishers
+from database import database  # your database.py file
 
-async def get_publishers(skip: int = 0, limit: int = 10):
-    query="""
-        SELECT PublishName, ContactInfo
-        FROM Publishers
-        LIMIT :limit OFFSET :skip
-        """
-    return await database.fetch_all(query=query, values={'limit': limit, 'skip': skip})
+TABLE_NAME = "Publishers"
 
-# READ one: Get single publisher by PublishName
-async def get_publisher(PublishName: str):
-    query = """
-    SELECT PublishName, ContactInfo
-    FROM Publishers WHERE PublishName = :PublishName
+# Ensure connection is active
+async def ensure_connection():
+    if not database.is_connected:
+        await database.connect()
+
+# Get all publishers with optional pagination
+async def get_publishers(skip: int = 0, limit: int = 100) -> List[Publishers]:
+    await ensure_connection()
+    query = f"SELECT PublishName, ContactInfo FROM {TABLE_NAME} LIMIT :limit OFFSET :skip"
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    return [Publishers(**row) for row in rows]
+
+# Get a single publisher by name
+async def get_publisher(name: str) -> Publishers:
+    await ensure_connection()
+    query = f"SELECT PublishName, ContactInfo FROM {TABLE_NAME} WHERE PublishName = :name"
+    row = await database.fetch_one(query=query, values={"name": name})
+    if row:
+        return Publishers(**row)
+    raise HTTPException(status_code=404, detail="Publisher not found")
+
+# Create a new publisher
+async def create_publisher(publisher: Publishers) -> Publishers:
+    await ensure_connection()
+    query = f"""
+        INSERT INTO {TABLE_NAME} (PublishName, ContactInfo)
+        VALUES (:PublishName, :ContactInfo)
     """
-    row = await database.fetch_one(query=query, values={"PublishName": PublishName})
-    return dict(row) if row else None  # Convert Row → dict for Pydantic
+    await database.execute(query=query, values=publisher.dict())
+    return publisher
 
-# CREATE: Insert a new publisher. Returns the PublishName (PK).
-# :param tells type checkers what each argument is — improves code clarity and IDE help.
-async def create_publisher(PublishName: str, ContactInfo: str) -> str:
-    query = """
-    INSERT INTO Publishers (PublishName, ContactInfo)
-    VALUES (:PublishName, :ContactInfo)
+# Update an existing publisher
+async def update_publisher(publisher: Publishers) -> Publishers:
+    await ensure_connection()
+    query = f"""
+        UPDATE {TABLE_NAME}
+        SET ContactInfo = :ContactInfo
+        WHERE PublishName = :PublishName
     """
-    try:
-        # Execute the insert using named parameters (:name) — safe from SQL injection
-        await database.execute(query=query, values={
-            "PublishName": PublishName,
-            "ContactInfo": ContactInfo
-        })
-        return PublishName  # Return PK so API can confirm creation
-    except Exception:
-        # Raise clear error if PublishName already exists (duplicate primary key)
-        raise ValueError(f"Publisher with name {PublishName} already exists.")
-    
-# UPDATE
-async def update_publisher(PublishName: str, ContactInfo: str) -> bool:
-    query = """
-    UPDATE Publishers SET ContactInfo = :ContactInfo
-    WHERE PublishName = :PublishName
-    """
-    try:
-        await database.execute(query=query, values={
-            "PublishName": PublishName,
-            "ContactInfo": ContactInfo
-        })
-        return True
-    except Exception as err:
-        raise ValueError(f"Error updating publisher {PublishName}: {err}")
-    
-# DELETE one
-async def delete_publisher(PublishName: str) -> str:
-    query = "DELETE FROM Publishers WHERE PublishName = :PublishName"
-    return await database.execute(query=query, values={"PublishName": PublishName})
+    await database.execute(query=query, values=publisher.dict())
+    return publisher
 
-# DELETE many
-async def delete_publishers(PublishNames: list[str]) -> int:
+# Delete a publisher by name
+async def delete_publisher(name: str):
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE PublishName = :name"
+    await database.execute(query=query, values={"name": name})
+
+# Delete multiple publishers by names
+async def delete_publishers(PublishNames: List[str]) -> int:
     if not PublishNames:
         return 0  # Nothing to delete
-    placeholders = ', '.join(f":name{i}" for i in range(len(PublishNames)))
-    query = f"DELETE FROM Publishers WHERE PublishName IN ({placeholders})"
-    values = {f"name{i}": name for i, name in enumerate(PublishNames)}
-    return await database.execute(query=query, values=values)
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE PublishName IN :PublishNames"
+    return await database.execute(query=query, values={"PublishNames": PublishNames})

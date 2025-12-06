@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Member Sign Up</title>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+        max-width: 600px;
+        margin: auto;
+      }
+      label {
+        display: block;
+        margin: 10px 0 5px;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+      }
+      button {
+        margin-top: 15px;
+        padding: 10px 20px;
+      }
+      #message {
+        margin-top: 15px;
+        color: green;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Member Sign Up</h1>
+
+    <form onsubmit="event.preventDefault(); createMember();">
+      <label>Name:</label>
+      <input type="text" id="memName" required />
+
+      <label>Email:</label>
+      <input type="email" id="email" required />
+
+      <label>Phone:</label>
+      <input type="text" id="phone" required />
+
+      <label>Address:</label>
+      <input type="text" id="address" required />
+
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <div id="message"></div>
+
+    <a href="/">⬅ Back to Home</a>
+
+    <script>
+      const API_URL = "/api/members";
+
+      async function createMember() {
+        const member = {
+          memberID: 0, // ignored but required by backend model
+          memName: document.getElementById("memName").value,
+          Email: document.getElementById("email").value,
+          Phone: document.getElementById("phone").value,
+          Address: document.getElementById("address").value,
+        };
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(member),
+        });
+
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Member created successfully!";
+
+          // Redirect after success (optional)
+          setTimeout(() => {
+            window.location.href = "/member/home";
+          }, 1000);
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+    </script>
+  </body>
+</html>

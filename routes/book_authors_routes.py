@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
 from database import database
-from schemas.book_authors import BookAuthorRead, BookAuthorCreate
+from schemas.book_authors import BookAuthor
 from crud.book_authors_crud import (
     get_book_authors,
     get_authors_by_book,
@@ -16,29 +16,29 @@ router = APIRouter(prefix="/api/book-authors", tags=["BookAuthors"])
 
 
 # GET all book-author relationships
-@router.get("/", response_model=List[BookAuthorRead])
-async def api_get_book_authors(skip: int = 0, limit: int = 10):
+@router.get("/", response_model=List[BookAuthor])
+async def api_get_book_authors(skip: int = 0, limit: int = 1000):
     async with database:
         rows = await get_book_authors(skip, limit)
-        return [BookAuthorRead(**r) for r in rows]
+        return [BookAuthor(**dict(r._mapping)) for r in rows]
 
 # GET all authors for a specific book
-@router.get("/book/{isbn}", response_model=List[BookAuthorRead])
+@router.get("/book/{isbn}", response_model=List[BookAuthor])
 async def api_get_authors_by_book(isbn: str):
     async with database:
         rows = await get_authors_by_book(isbn)
-        return [BookAuthorRead(**r) for r in rows]
+        return [BookAuthor(**r) for r in rows]
     
 # GET all books for a specific author
-@router.get("/author/{author_name}", response_model=List[BookAuthorRead])
+@router.get("/author/{author_name}", response_model=List[BookAuthor])
 async def api_get_books_by_author(author_name: str):
     async with database:
         rows = await get_books_by_author(author_name)
-        return [BookAuthorRead(**r) for r in rows]
+        return [BookAuthor(**r) for r in rows]
 
 # POST: Create new book-author relationship
-@router.post("/", response_model=BookAuthorRead)
-async def api_create_book_author(rel: BookAuthorCreate):
+@router.post("/", response_model=BookAuthor)
+async def api_create_book_author(rel: BookAuthor):
     async with database:
         try:
             return await create_book_author(rel.ISBN, rel.AuthorName)

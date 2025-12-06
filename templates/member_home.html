@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>All Books</title>
+    <style>
+      body {
+        font-family: Verdana, sans-serif;
+        margin: 20px;
+      }
+      nav {
+        margin-bottom: 20px;
+      }
+      nav a {
+        margin-right: 10px;
+        padding: 8px 12px;
+        text-decoration: none;
+        background-color: #ddd;
+        color: black;
+        border-radius: 4px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>All Books</h1>
+
+    <nav>
+      <a href="http://127.0.0.1:8008/member/home">All Books</a>
+      <a href="http://127.0.0.1:8008/member/available">Available for Loan</a>
+      <a href="http://127.0.0.1:8008/member/on-loan">Books on Loan / Reserve</a>
+    </nav>
+
+    <table id="booksTable">
+      <thead>
+        <tr>
+          <th>ISBN</th>
+          <th>Title</th>
+          <th>Categories</th>
+          <th>Publish Year</th>
+          <th>Publisher</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      async function loadBooks() {
+        const url = "/api/books"; // <-- API endpoint for all books
+        try {
+          const res = await fetch(url);
+          const books = await res.json();
+
+          const tbody = document.querySelector("#booksTable tbody");
+          tbody.innerHTML = "";
+
+          books.forEach((b) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+            <td>${b.ISBN}</td>
+            <td>${b.Title}</td>
+            <td>${b.Categories ?? ""}</td>
+            <td>${b.PublishYear ?? ""}</td>
+            <td>${b.PublishName ?? ""}</td>
+            <td></td>
+          `;
+            tbody.appendChild(tr);
+          });
+        } catch (err) {
+          document.getElementById("message").innerText = "Error loading books.";
+          console.error(err);
+        }
+      }
+
+      loadBooks();
+    </script>
+  </body>
+</html>

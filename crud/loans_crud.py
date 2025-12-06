@@ -1,67 +1,73 @@
-from database import database
-from typing import Optional, List
+# crud/loans_crud.py
+from typing import List, Optional
 from datetime import date
+from databases import Database
+from schemas.loans import Loans
+from database import database
 
-# Get many loans
-async def get_loans(skip: int = 0, limit: int = 10):
-    query = """
+TABLE_NAME = "Loans"
+
+# Ensure database connection
+async def ensure_connection():
+    if not database.is_connected:
+        await database.connect()
+
+
+# Fetch all loans with optional pagination
+async def get_loans(skip: int = 0, limit: int = 100) -> List[Loans]:
+    await ensure_connection()
+    query = f"""
         SELECT LoanID, ReturnDate, ISBN, MemberID, StaffID, CopyID
-        FROM Loans
+        FROM {TABLE_NAME}
         LIMIT :limit OFFSET :skip
     """
-    return await database.fetch_all(query=query, values={"limit": limit, "skip": skip})
+    rows = await database.fetch_all(query=query, values={"skip": skip, "limit": limit})
+    loans = []
+    for row in rows:
+        loan_data = dict(row)
+        if loan_data.get("ReturnDate"):
+            loan_data["ReturnDate"] = loan_data["ReturnDate"].isoformat()
+        loans.append(Loans(**loan_data))
+    return loans
 
-# Get single loan by LoanID
-async def get_loan(loan_id: int) -> Optional[dict]:
-    query = """
+
+# Fetch a single loan by LoanID
+async def get_loan(loan_id: int) -> Optional[Loans]:
+    await ensure_connection()
+    query = f"""
         SELECT LoanID, ReturnDate, ISBN, MemberID, StaffID, CopyID
-        FROM Loans
+        FROM {TABLE_NAME}
         WHERE LoanID = :loan_id
     """
     row = await database.fetch_one(query=query, values={"loan_id": loan_id})
-    return dict(row) if row else None
+    if row:
+        loan_data = dict(row)
+        if loan_data.get("ReturnDate"):
+            loan_data["ReturnDate"] = loan_data["ReturnDate"].isoformat()
+        return Loans(**loan_data)
+    return None
+
 
 # Create a new loan
-async def create_loan(
-    loan_id: int,
-    return_date: Optional[date],
-    isbn: Optional[str],
-    member_id: Optional[int],
-    staff_id: Optional[int],
-    copy_id: Optional[int],
-) -> int:
-    query = """
-        INSERT INTO Loans (LoanID, ReturnDate, ISBN, MemberID, StaffID, CopyID)
+async def create_loan(loan: Loans) -> Loans:
+    await ensure_connection()
+    query = f"""
+        INSERT INTO {TABLE_NAME} (LoanID, ReturnDate, ISBN, MemberID, StaffID, CopyID)
         VALUES (:LoanID, :ReturnDate, :ISBN, :MemberID, :StaffID, :CopyID)
     """
+    values = loan.dict()
+    # Convert date to string if present
+    if values.get("ReturnDate") and isinstance(values["ReturnDate"], date):
+        values["ReturnDate"] = values["ReturnDate"].isoformat()
+    await database.execute(query=query, values=values)
+    return loan
 
-    try:
-        await database.execute(
-            query=query,
-            values={
-                "LoanID": loan_id,
-                "ReturnDate": return_date,
-                "ISBN": isbn,
-                "MemberID": member_id,
-                "StaffID": staff_id,
-                "CopyID": copy_id,
-            },
-        )
-        return loan_id
-    except Exception as err:
-        raise ValueError(f"Loan {loan_id} already exists or FK error: {err}")
 
-# Update a loan
-async def update_loan(
-    loan_id: int,
-    return_date: Optional[date],
-    isbn: Optional[str],
-    member_id: Optional[int],
-    staff_id: Optional[int],
-    copy_id: Optional[int],
-) -> bool:
-    query = """
-        UPDATE Loans
+# Update an existing loan
+async def update_loan(loan: Loans) -> Loans:
+    await ensure_connection()
+    query = f"""
+        UPDATE {TABLE_NAME}
         SET ReturnDate = :ReturnDate,
             ISBN = :ISBN,
             MemberID = :MemberID,
@@ -69,35 +75,15 @@ async def update_loan(
             CopyID = :CopyID
         WHERE LoanID = :LoanID
     """
+    values = loan.dict()
+    if values.get("ReturnDate") and isinstance(values["ReturnDate"], date):
+        values["ReturnDate"] = values["ReturnDate"].isoformat()
+    await database.execute(query=query, values=values)
+    return loan
 
-    try:
-        await database.execute(
-            query=query,
-            values={
-                "LoanID": loan_id,
-                "ReturnDate": return_date,
-                "ISBN": isbn,
-                "MemberID": member_id,
-                "StaffID": staff_id,
-                "CopyID": copy_id,
-            },
-        )
-        return True
-    except Exception as err:
-        raise ValueError(f"Error updating Loan {loan_id}: {err}")
 
-# Delete one loan
-async def delete_loan(loan_id: int) -> int:
-    query = "DELETE FROM Loans WHERE LoanID = :loan_id"
-    return await database.execute(query=query, values={"loan_id": loan_id})
-
-# Delete many loans
-async def delete_loans(loan_ids: List[int]) -> int:
-    if not loan_ids:
-        return 0
-
-    placeholders = ",".join(f":id{i}" for i in range(len(loan_ids)))
-    query = f"DELETE FROM Loans WHERE LoanID IN ({placeholders})"
-    values = {f"id{i}": loan_id for i, loan_id in enumerate(loan_ids)}
-
-    return await database.execute(query=query, values=values)
+# Delete a loan by LoanID
+async def delete_loan(loan_id: int) -> None:
+    await ensure_connection()
+    query = f"DELETE FROM {TABLE_NAME} WHERE LoanID = :loan_id"
+    await database.execute(query=query, values={"loan_id": loan_id})

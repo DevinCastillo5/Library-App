@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Copies</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 5px;
+      }
+      #message {
+        margin-top: 10px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Copies</h1>
+
+    <h2>Add / Update Copy</h2>
+    <label>CopyID: <input type="number" id="copyID" /></label>
+    <label>ISBN: <input type="text" id="isbn" /></label>
+    <label>Shelf Location: <input type="text" id="shelfLocation" /></label>
+    <label>Condition: <input type="text" id="conditionDesc" /></label>
+    <button onclick="createCopy()">Create</button>
+    <button onclick="updateCopy()">Update</button>
+
+    <button onclick="window.location.href='http://127.0.0.1:8008/staff'">
+      Back
+    </button>
+
+    <h2>Copies List</h2>
+    <table id="copiesTable">
+      <thead>
+        <tr>
+          <th>CopyID</th>
+          <th>ISBN</th>
+          <th>Shelf Location</th>
+          <th>Condition</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="message"></div>
+
+    <script>
+      const API_URL = "/api/copies";
+
+      let editingCopyID = null;
+
+      // Fetch and display all copies
+      async function loadCopies() {
+        const res = await fetch(API_URL + "/");
+        const copies = await res.json();
+        const tbody = document.querySelector("#copiesTable tbody");
+        tbody.innerHTML = "";
+        copies.forEach((copy) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${copy.CopyID}</td>
+            <td>${copy.ISBN}</td>
+            <td>${copy.ShelfLocation || ""}</td>
+            <td>${copy.ConditionDesc || ""}</td>
+            <td>
+              <button onclick="editCopy(${copy.CopyID}, '${copy.ISBN}', '${
+            copy.ShelfLocation || ""
+          }', '${copy.ConditionDesc || ""}')">Edit</button>
+              <button onclick="deleteCopy(${copy.CopyID})">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Create new copy
+      async function createCopy() {
+        const copy = {
+          CopyID: parseInt(document.getElementById("copyID").value),
+          ISBN: document.getElementById("isbn").value,
+          ShelfLocation: document.getElementById("shelfLocation").value,
+          ConditionDesc: document.getElementById("conditionDesc").value,
+        };
+        const res = await fetch(API_URL + "/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(copy),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Copy created successfully!";
+          loadCopies();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Prepare copy for editing
+      function editCopy(CopyID, ISBN, ShelfLocation, ConditionDesc) {
+        editingCopyID = CopyID;
+        document.getElementById("copyID").value = CopyID;
+        document.getElementById("copyID").disabled = true;
+        document.getElementById("isbn").value = ISBN;
+        document.getElementById("shelfLocation").value = ShelfLocation;
+        document.getElementById("conditionDesc").value = ConditionDesc;
+      }
+
+      // Update copy
+      async function updateCopy() {
+        if (editingCopyID === null)
+          return alert("Select a copy to edit first.");
+        const copy = {
+          CopyID: editingCopyID,
+          ISBN: document.getElementById("isbn").value,
+          ShelfLocation: document.getElementById("shelfLocation").value,
+          ConditionDesc: document.getElementById("conditionDesc").value,
+        };
+        const res = await fetch(API_URL + "/", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(copy),
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText =
+            "Copy updated successfully!";
+          editingCopyID = null;
+          document.getElementById("copyID").disabled = false;
+          loadCopies();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Delete copy
+      async function deleteCopy(CopyID) {
+        if (!confirm(`Delete copy "${CopyID}"?`)) return;
+        const res = await fetch(`${API_URL}/${CopyID}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          document.getElementById("message").innerText = "Copy deleted!";
+          loadCopies();
+        } else {
+          const err = await res.json();
+          document.getElementById("message").innerText = "Error: " + err.detail;
+        }
+      }
+
+      // Initial load
+      loadCopies();
+    </script>
+  </body>
+</html>

@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class CourseView(BaseModelView):
+class MemberView(BaseModelView):
     # ===================================================================
     # BASIC CONFIGURATION
     # ===================================================================

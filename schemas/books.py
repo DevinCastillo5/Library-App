@@ -11,10 +11,3 @@ class Books(BaseModel):
     PublishName: Optional[str] = None
 
 # the optional is because it can be null
-
-class BookCreate(BookBase):
-    pass
-
-
-class BookRead(BookBase):
-    pass
